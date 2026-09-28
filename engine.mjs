@@ -100,6 +100,19 @@ export function validatePlan(p) {
   return clone(p);
 }
 const route = (intent, metricId = null, caseId = null, overrides = {}) => ({ intent, metricId, caseId, overrides });
+// Navigation requests ("go back", "back to the overview") are recognised before routing in every mode.
+// A plain step back needs no plan; a named target is routed like any question so the client can
+// restore that earlier view, or show it fresh when it was never shown in this session.
+export function navigation(question) {
+  const q = String(question || '').toLowerCase().replace(/[.!?]+\s*$/, '').replace(/^(?:ok(?:ay)?|please|now|and|so)[,\s]+/, '').replace(/[,\s]+please$/, '').trim();
+  if (/^(?:(?:can|could|would) you\s+)?(?:go|take me|bring me|jump|head|step|move|navigate)\s+back(?:\s+(?:one|a)\s+(?:step|screen|view|page))?$|^back$|^undo$|^(?:the\s+)?(?:previous|last|prior)\s+(?:screen|view|page)$|^(?:show|open|go to|take me to)\s+(?:me\s+)?(?:the\s+)?(?:previous|last|prior)\s+(?:screen|view|page|one)$/.test(q)) return { type: 'back', target: null };
+  const m = q.match(/^(?:(?:can|could|would) you\s+)?(?:(?:go|take me|bring me|jump|head|navigate)\s+back|back|return)\s+to\s+(?:the\s+)?(.{2,200})$/);
+  if (!m) return null;
+  return /^(?:previous|last|prior)\s+(?:screen|view|page|one)$/.test(m[1]) ? { type: 'back', target: null } : { type: 'back', target: m[1] };
+}
+export function backAnswer(request, mode = 'demo') {
+  return clone({ mode, question: request.question, title: 'Previous view', answer: 'Going back to the previous view.', scope: scopeOf(request.scope), action: { type: 'back', metricId: null, caseId: null, overrides: {} }, navigation: { type: 'back', target: false }, facts: [], evidence: [], followups: [], boundary: 'Navigation only; the earlier view is restored as it was shown in this session.', sourceVersion: D.sourceVersion });
+}
 export function demoPlan({ question, context }) {
   const q = question.toLowerCase();
   const id = question.toUpperCase().match(/\b(?:[OP]\d{2}|E\d{2}|C01)\b/)?.[0];

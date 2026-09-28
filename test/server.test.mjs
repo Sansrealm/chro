@@ -79,3 +79,25 @@ test('shared links reach sign-in while cross-site APIs, frames and posts stay bl
   assert.equal((await raw(url+'/api/login',{method:'POST',headers})).status,403);
   assert.equal((await raw(url+'/',{headers:{...headers,origin:'https://example.org'}})).status,403);
 });
+
+test('go back needs no routing call; a named target is routed like any question', async t => {
+  const calls = [];
+  const overrides = Object.fromEntries(routingSchema.properties.overrides.required.map(x => [x, null]));
+  const { url } = await setup(t, { apiKey: 'TEST_ONLY_NEVER_SENT', fetchImpl: async (endpoint, init) => {
+    calls.push(JSON.parse(init.body));
+    return Response.json({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({ intent: 'metric', metricId: 'C01', caseId: null, overrides }) }] }] });
+  } });
+  const back = await (await post(url, '/api/ask', { question: 'Go back' })).json();
+  assert.equal(calls.length, 0); assert.equal(back.action.type, 'back'); assert.deepEqual(back.navigation, { type: 'back', target: false });
+  const named = await (await post(url, '/api/ask', { question: 'Take me back to first-year retention' })).json();
+  assert.equal(calls.length, 1); assert.equal(JSON.parse(calls[0].input).question, 'first-year retention');
+  assert.deepEqual(named.navigation, { type: 'back', target: 'first-year retention', intent: 'metric' });
+  assert.equal(named.action.metricId, 'C01'); assert.equal(named.facts[0].value, '14.0%');
+});
+test('demo mode resolves a named back target locally', async t => {
+  const { url } = await setup(t, { fetchImpl: () => { throw new Error('Unexpected network'); } });
+  const named = await (await post(url, '/api/ask', { question: 'go back to the HR service queue' })).json();
+  assert.equal(named.navigation.intent, 'metric'); assert.equal(named.action.metricId, 'O04');
+  const unknown = await (await post(url, '/api/ask', { question: 'go back to succession coverage' })).json();
+  assert.equal(unknown.navigation.intent, 'clarify');
+});

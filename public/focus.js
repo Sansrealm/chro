@@ -14,6 +14,8 @@
   keys: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z M7 10h1 M11 10h1 M15 10h1 M7 14h10"/></svg>',
   send: '<svg viewBox="0 0 12 12" aria-hidden="true"><rect width="12" height="12" rx="2" fill="currentColor"/></svg>',
   down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>',
+  left: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
   more: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>'
  };
 
@@ -67,9 +69,9 @@
 
  // Capsule: one place to talk, type and read the current answer.
  const wrap = document.createElement('div'); wrap.className = 'fx-capsule-wrap';
- wrap.innerHTML = `<div class="fx-capsule" data-state="idle"><button type="button" class="fx-orb"></button><button type="button" class="fx-display" aria-controls="wi-conversation" aria-expanded="false"><span class="fx-text">Ask Workforce</span></button><button type="button" class="fx-end" hidden aria-label="End conversation">${svg.send}<span>End</span></button><button type="button" class="fx-expand" hidden aria-controls="wi-conversation" aria-expanded="false" aria-label="Show answer detail">${svg.down}</button><span class="fx-progress" aria-hidden="true"></span></div><span class="fx-sr" role="status" aria-live="polite"></span>`;
+ wrap.innerHTML = `<div class="fx-capsule" data-state="idle"><button type="button" class="fx-orb"></button><button type="button" class="fx-display" aria-controls="wi-conversation" aria-expanded="false"><span class="fx-text">Ask Workforce</span></button><button type="button" class="fx-end" hidden aria-label="End conversation">${svg.send}<span>End</span></button><button type="button" class="fx-nav fx-back" hidden aria-label="Previous view">${svg.left}</button><button type="button" class="fx-nav fx-fwd" hidden aria-label="Next view">${svg.right}</button><button type="button" class="fx-expand" hidden aria-controls="wi-conversation" aria-expanded="false" aria-label="Show answer detail">${svg.down}</button><span class="fx-progress" aria-hidden="true"></span></div><span class="fx-sr" role="status" aria-live="polite"></span>`;
  chip.after(wrap);
- const cap = wrap.querySelector('.fx-capsule'), orb = cap.querySelector('.fx-orb'), display = cap.querySelector('.fx-display'), text = cap.querySelector('.fx-text'), end = cap.querySelector('.fx-end'), expand = cap.querySelector('.fx-expand'), sr = wrap.querySelector('.fx-sr');
+ const cap = wrap.querySelector('.fx-capsule'), orb = cap.querySelector('.fx-orb'), display = cap.querySelector('.fx-display'), text = cap.querySelector('.fx-text'), end = cap.querySelector('.fx-end'), expand = cap.querySelector('.fx-expand'), back = cap.querySelector('.fx-back'), fwd = cap.querySelector('.fx-fwd'), sr = wrap.querySelector('.fx-sr');
  sheet.classList.add('fx-sheet');
  const askToggle = root.querySelector('.vc-toggle');
  const ensureAskOpen = () => { if (askToggle && askToggle.getAttribute('aria-expanded') !== 'true') askToggle.click(); };
@@ -90,7 +92,7 @@
  sheet.addEventListener('click', e => { if (e.target.closest('#vc-actions .vc-primary')) setSheet(false); });
 
  let notice = null, noticeTimer = 0, prevLiveState = '', liveAttempt = false;
- function flash(message) { notice = message; clearTimeout(noticeTimer); noticeTimer = setTimeout(() => { notice = null; render(); }, 8000); render(); }
+ function flash(message, kind = 'error') { notice = { text: message, kind }; clearTimeout(noticeTimer); noticeTimer = setTimeout(() => { notice = null; render(); }, 8000); render(); }
  const visible = el => !!el && !el.hidden;
  const hasAnswer = () => visible(q('#vc-result')) && !!q('#vc-title')?.textContent;
  const canLive = () => { const b = q('#wl-start'); return !!b && !b.disabled; };
@@ -135,8 +137,12 @@
   if (q('#vc-mic')?.getAttribute('aria-pressed') === 'true') return { state: 'recording', text: 'Recording — tap the mic to send' };
   if (/Finding the evidence|transcrib|Preparing/i.test(statusText) && status?.dataset.kind !== 'error') return { state: 'thinking', text: /transcrib/i.test(statusText) ? 'Transcribing…' : 'Finding the evidence…' };
   if (visible(q('#vc-stop'))) return { state: 'speaking', text: headline() || 'Speaking…' };
-  if (notice) return { state: 'error', text: notice };
+  if (notice) return { state: notice.kind === 'info' ? 'answered' : 'error', text: notice.text };
   if (status?.dataset.kind === 'error' && statusText) return { state: 'error', text: statusText };
+  if (looseAnswer) return { state: 'answered', text: headlineOf(looseAnswer) };
+  const entry = trail[pointer];
+  if (entry?.answer) return { state: 'answered', text: headlineOf(entry.answer) };
+  if (entry && trail.some(x => x.answer)) return { state: 'viewing', text: entry.label };
   if (hasAnswer()) return { state: 'answered', text: headline() };
   return { state: 'idle', text: 'Ask Workforce' };
  }
@@ -158,6 +164,9 @@
   display.setAttribute('aria-label', (d.state === 'answered' ? 'Current answer: ' : '') + d.text + (d.state === 'answered' ? '. Show detail' : d.state === 'idle' ? '. Type a question' : ''));
   end.hidden = !['listening', 'muted', 'connecting'].includes(d.state) && !(d.state === 'thinking' && d.live);
   expand.hidden = !hasAnswer() || live;
+  back.hidden = fwd.hidden = trail.length < 2 || live;
+  back.disabled = pointer <= 0; fwd.disabled = pointer >= trail.length - 1;
+  back.title = pointer > 0 ? 'Back to ' + trail[pointer - 1].label : ''; fwd.title = pointer < trail.length - 1 ? 'Forward to ' + trail[pointer + 1].label : '';
   if (d.text !== lastSpoken && d.state !== 'listening') { sr.textContent = d.text; lastSpoken = d.text; }
  }
  let frame = 0;
@@ -165,8 +174,83 @@
  const watch = ['#vc-status', '#vc-result', '#vc-title', '#vc-facts', '#vc-stop', '#vc-mic', '#wl-toggle', '#wl-mic', '#wl-user-caption', '#wl-result', '#wl-state', '#wl-start', '#wl-mute'];
  const observer = new MutationObserver(schedule);
  watch.forEach(sel => { const el = q(sel); if (el) observer.observe(el, { attributes: true, childList: true, characterData: true, subtree: true }); });
- // A newly shown answer opens the detail sheet once; the dashboard stays reachable.
+ // Session trail: every screen change (asked, typed or tapped) is a step. The trail is append-only;
+ // stepping back moves a pointer and a new step is always added at the end, so nothing is lost.
+ const app = root.__WI_APP, main = q('#wi-main');
+ const trail = []; let pointer = -1, restoring = null, pendingAnswer = null, looseAnswer = null;
+ const copy = v => { try { return structuredClone(v); } catch { return JSON.parse(JSON.stringify(v)); } };
+ function viewOf() { const s = app.state; return { page: s.page, domain: s.domain, people: s.people, operations: s.operations, metric: s.metric, trustTab: s.trustTab, function: s.function, region: s.region, period: s.period, audience: s.audience, decide: copy(s.decide) }; }
+ const keyOf = v => [v.page, v.page === 'monitor' ? v.domain + '/' + (v[v.domain] || '') : '', v.page === 'investigate' ? v.metric : '', v.page === 'decide' ? (v.decide?.caseId || '') + '/' + (v.decide?.subview || '') : '', v.page === 'trust' ? v.trustTab : '', v.function, v.region, v.period, v.audience].join('|');
+ function labelOf(v) {
+  const name = v.page === 'monitor' ? (q('#wi-domains [aria-current="page"]')?.textContent || 'Executive overview').replace(/^\s*\d+\s*/, '').trim() : (main.querySelector('h1')?.textContent || v.page).trim();
+  const where = [v.function === 'all' ? '' : v.function, v.region === 'all' ? '' : v.region].filter(Boolean).join(', ');
+  return where ? name + ' · ' + where : name;
+ }
+ const answerKey = a => a ? a.title + '|' + a.answer : '';
+ function headlineOf(a) { const v = a?.facts?.[0]?.value, t = a?.title || ''; return v && t && v.length < 24 ? v + ' · ' + t : t; }
+ function record() {
+  if (!app || app.state.presenting) return;
+  const v = viewOf(), key = keyOf(v);
+  if (restoring !== null && trail[restoring]) { pointer = restoring; restoring = null; trail[pointer].view = v; schedule(); return; }
+  restoring = null;
+  if (pointer >= 0 && trail[pointer].key === key) { trail[pointer].view = v; if (pendingAnswer) { trail[pointer].answer = pendingAnswer; pendingAnswer = null; looseAnswer = null; } schedule(); return; }
+  trail.push({ key, view: v, label: labelOf(v), answer: pendingAnswer, at: Date.now() }); pendingAnswer = null; looseAnswer = null;
+  if (trail.length > 60) trail.shift();
+  pointer = trail.length - 1; schedule();
+ }
+ let recordTimer = 0;
+ if (app && main) new MutationObserver(() => { clearTimeout(recordTimer); recordTimer = setTimeout(record, 120); }).observe(main, { childList: true });
+ function restore(i, { announce = false } = {}) {
+  const e = trail[i]; if (!e || !app) return false;
+  restoring = i; notice = null; looseAnswer = null; pendingAnswer = null;
+  if (e.answer && window.WI_CONVERSATION?.showResponse) {
+   const a = copy(e.answer); delete a.question; delete a.navigation; lastAnswer = answerKey(a);
+   window.WI_CONVERSATION.showResponse(a).catch(() => {});
+  }
+  const s = app.state, v = e.view;
+  Object.assign(s, { page: v.page, domain: v.domain, people: v.people, operations: v.operations, metric: v.metric, trustTab: v.trustTab, function: v.function, region: v.region, period: v.period, audience: v.audience, presenting: false });
+  if (v.decide) Object.assign(s.decide, copy(v.decide));
+  app.render(); setSheet(false); scrollTo({ top: 0, behavior: 'smooth' });
+  if (announce) flash('Back to ' + e.label, 'info'); else schedule();
+  return true;
+ }
+ back.addEventListener('click', () => restore(pointer - 1));
+ fwd.addEventListener('click', () => restore(pointer + 1));
+ const stop = new Set(['the', 'and', 'for', 'with', 'view', 'screen', 'page', 'show', 'one', 'that', 'this', 'about', 'our']);
+ function textMatch(target) {
+  const words = String(target).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !stop.has(w));
+  if (!words.length) return -1;
+  for (let i = trail.length - 1; i >= 0; i--) { if (i === pointer) continue; const label = trail[i].label.toLowerCase(); if (words.every(w => label.includes(w.slice(0, 5)))) return i; }
+  return -1;
+ }
+ // "Go back" and "go back to X" arrive as answers carrying a navigation flag, from typed and voice questions alike.
+ function navigate(data) {
+  const nav = data?.navigation; if (!nav) return false;
+  if (!nav.target) { if (pointer > 0) restore(pointer - 1, { announce: true }); else flash('This is the first view in this session.', 'info'); return true; }
+  const a = nav.intent === 'clarify' ? {} : data.action || {}; let idx = -1;
+  for (let i = trail.length - 1; i >= 0 && idx < 0; i--) {
+   if (i === pointer) continue; const v = trail[i].view;
+   if ((a.type === 'metric' && v.page === 'investigate' && v.metric === a.metricId) || (a.type === 'scenario' && v.page === 'decide' && v.decide?.caseId === a.caseId) || (a.type === 'overview' && v.page === 'monitor' && v.domain === 'overview')) idx = i;
+  }
+  if (idx < 0) idx = textMatch(nav.target);
+  return idx >= 0 ? restore(idx, { announce: true }) : false;
+ }
+ window.WI_FOCUS = Object.freeze({ navigate, trail: () => trail.map(({ label, at, answer }) => ({ label, at, question: answer?.question || null })), position: () => pointer });
+ addEventListener('wi-source-updated', () => { trail.forEach(e => { e.answer = null; }); looseAnswer = null; pendingAnswer = null; schedule(); });
+ // A new answer takes the dashboard to its view; the capsule keeps the headline. Answers without a view open the sheet.
  let lastAnswer = '';
- new MutationObserver(() => { const now = hasAnswer() ? q('#vc-title').textContent + '|' + (q('#vc-answer')?.textContent || '') : ''; if (now && now !== lastAnswer) { lastAnswer = now; setSheet(true); } if (!now) lastAnswer = ''; }).observe(q('#vc-result') || sheet, { attributes: true, childList: true, subtree: true, characterData: true });
+ new MutationObserver(() => {
+  const now = hasAnswer() ? q('#vc-title').textContent + '|' + (q('#vc-answer')?.textContent || '') : '';
+  if (!now) { lastAnswer = ''; return; }
+  if (now === lastAnswer) return;
+  lastAnswer = now;
+  notice = null; clearTimeout(noticeTimer);
+  const data = window.WI_CONVERSATION?.getAnswer?.(), primary = q('#vc-actions .vc-primary');
+  // Clarifications have no facts and stay in the sheet rather than moving the dashboard.
+  if (primary && data?.facts?.length) { pendingAnswer = data; looseAnswer = null; primary.click(); setSheet(false); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120); }
+  else { pendingAnswer = null; looseAnswer = data; setSheet(true); }
+  schedule();
+ }).observe(q('#vc-result') || sheet, { attributes: true, childList: true, subtree: true, characterData: true });
+ record();
  render();
 })();

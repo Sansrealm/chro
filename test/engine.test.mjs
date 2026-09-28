@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { answer, cases, choices, demoPlan, descriptor, limits, metricIds, modelPlan, routingSchema, scenario, summary, validatePlan, validateRequest } from '../engine.mjs';
+import { answer, backAnswer, cases, choices, demoPlan, navigation, descriptor, limits, metricIds, modelPlan, routingSchema, scenario, summary, validatePlan, validateRequest } from '../engine.mjs';
 
 const request = (question, scope = {}) => validateRequest({ question, scope });
 const plan = (intent, metricId = null, caseId = null, overrides = {}) => ({ intent, metricId, caseId, overrides });
@@ -121,4 +121,13 @@ test('unhandled numeric requests fail clearly even without scenario trigger word
   assert.equal(demoPlan(request('Test half a percentage point')).caseId, 'retention');
   assert.equal(demoPlan(request('Explain P01 in January2026')).metricId, 'P01');
   assert.equal(demoPlan(request('Show first-year retention')).metricId, 'C01');
+});
+
+test('navigation requests are recognised before routing; ordinary questions are not', () => {
+  for (const q of ['Go back', 'go back.', 'Okay, go back please', 'back', 'previous screen', 'Show me the previous view', 'Can you go back to the last screen?', 'take me back one step']) assert.deepEqual(navigation(q), { type: 'back', target: null }, q);
+  assert.deepEqual(navigation('Take me back to the overview'), { type: 'back', target: 'overview' });
+  assert.deepEqual(navigation('return to the headcount'), { type: 'back', target: 'headcount' });
+  for (const q of ['What is the backlog?', 'How is attrition trending?', 'Explain E03', 'Show the overview', 'Why did people come back?']) assert.equal(navigation(q), null, q);
+  const b = backAnswer({ question: 'go back', scope: {} });
+  assert.equal(b.action.type, 'back'); assert.deepEqual(b.navigation, { type: 'back', target: false }); assert.deepEqual(b.facts, []);
 });
