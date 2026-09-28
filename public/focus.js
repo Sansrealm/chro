@@ -21,6 +21,12 @@
   more: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>'
  };
 
+ // Icon rail: each domain keeps its name as the accessible label and a hover/focus tooltip.
+ const domainsNav = q('#wi-domains');
+ function labelRail() { domainsNav?.querySelectorAll('button').forEach(b => { const name = b.textContent.replace(/^\s*\d+\s*/, '').trim(); if (b.dataset.label !== name) { b.dataset.label = name; b.setAttribute('aria-label', name); } }); }
+ if (domainsNav) { new MutationObserver(labelRail).observe(domainsNav, { childList: true }); labelRail(); }
+ const note = root.querySelector('.wi-demo-note');
+ if (note) { const tmp = document.createElement('div'); tmp.innerHTML = note.innerHTML.replace(/<br\s*\/?>/gi, ' · '); const full = tmp.textContent.replace(/\s+/g, ' ').trim(); note.dataset.label = full; note.setAttribute('tabindex', '0'); note.setAttribute('aria-label', full); }
  // Scope chip: the filter bar becomes a popover opened from one line of text.
  const filters = q('#wi-filters');
  const chip = document.createElement('button');

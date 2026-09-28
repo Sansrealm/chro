@@ -140,6 +140,27 @@
 #wi-app .fx-session-ask button svg{width:14px;height:14px}
 #wi-app .fx-session :focus-visible{outline:3px solid #bf7f25;outline-offset:2px}
 
+/* Sidebar as an icon rail (wide screens; below 1100px the Explore menu takes over) */
+@media(min-width:1101px){
+ #wi-app .wi-shell{grid-template-columns:72px minmax(0,1fr)}
+ #wi-app .wi-sidebar{position:sticky;top:0;align-self:start;height:100vh;box-sizing:border-box;padding:20px 0 18px;align-items:center;overflow:visible;z-index:40}
+ #wi-app .wi-sidebar .wi-brand{margin:0 0 26px;font-size:0;gap:0}
+ #wi-app .wi-sidebar .wi-brand>div{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ #wi-app .wi-sidebar .wi-monogram{width:40px;height:40px;border-radius:11px;font-size:24px}
+ #wi-app .wi-sidebar .wi-workspace-name,#wi-app .wi-sidebar .wi-side-caption,#wi-app .wi-sidebar .wi-side-link{display:none}
+ #wi-app .wi-sidebar .wi-domains{display:flex;flex-direction:column;align-items:center;gap:6px}
+ #wi-app .wi-sidebar .wi-domains button{position:relative;width:46px;height:46px;min-height:0;padding:0;justify-content:center;gap:0;font-size:0;border-radius:12px;color:#aab4a2}
+ #wi-app .wi-sidebar .wi-domains button[aria-current=page]{background:#deebbd;color:#253123}
+ #wi-app .wi-sidebar .wi-nav-number{width:20px;flex:0 0 20px}
+ #wi-app .wi-sidebar .wi-nav-number svg{width:20px;height:20px}
+ #wi-app .wi-sidebar .wi-domains button::after,#wi-app .wi-sidebar .wi-demo-note::after{content:attr(data-label);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);white-space:nowrap;background:#202720;color:#f3f5ee;border:1px solid #3a4335;border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:500;letter-spacing:0;line-height:1.3;box-shadow:0 8px 22px #0000002e;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s;z-index:90}
+ #wi-app .wi-sidebar .wi-domains button:hover::after,#wi-app .wi-sidebar .wi-domains button:focus-visible::after,#wi-app .wi-sidebar .wi-demo-note:hover::after,#wi-app .wi-sidebar .wi-demo-note:focus-visible::after{opacity:1;visibility:visible}
+ #wi-app .wi-sidebar .wi-side-bottom{padding-top:20px;display:flex;justify-content:center}
+ #wi-app .wi-sidebar .wi-demo-note{position:relative;margin:0;writing-mode:vertical-rl;transform:rotate(180deg);font-size:9.5px;letter-spacing:2.4px;line-height:1;cursor:default}
+ #wi-app .wi-sidebar .wi-demo-note::after{transform:rotate(180deg) translateY(50%);writing-mode:horizontal-tb;left:auto;right:calc(100% + 12px);top:50%;white-space:normal;width:220px}
+ #wi-app .wi-sidebar .wi-demo-note br,#wi-app .wi-sidebar .wi-demo-note span{display:none}
+}
+
 /* Narrow screens: the capsule takes its own row under the header (player-strip fallback) */
 @media(max-width:1279px){
  #wi-app .wi-toolbar{flex-wrap:wrap}
