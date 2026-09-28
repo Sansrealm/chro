@@ -106,8 +106,10 @@ export function createServer({ apiKey = process.env.OPENAI_API_KEY || '', fetchI
       if (publicOrigin) allowedHosts.push(new URL(publicOrigin).host);
       if (!allowedHosts.includes(req.headers.host)) throw fail(403, 'Host is not allowed');
       if (req.headers.origin && ![`http://${req.headers.host}`, publicOrigin].filter(Boolean).includes(req.headers.origin)) throw fail(403, 'Cross-origin requests are not allowed');
-      if (req.headers['sec-fetch-site'] && !['same-origin', 'none'].includes(req.headers['sec-fetch-site'])) throw fail(403, 'Cross-site requests are not allowed');
       const path = req.url?.split('?')[0];
+      // Shared links may navigate from another site; API calls and embedded pages may not.
+      const entryNavigation = req.method === 'GET' && ['/', '/index.html'].includes(path) && req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document';
+      if (req.headers['sec-fetch-site'] && !['same-origin', 'none'].includes(req.headers['sec-fetch-site']) && !entryNavigation) throw fail(403, 'Cross-site requests are not allowed');
       if (!path || path.includes('%') || path.includes('\\') || path.includes('..')) throw fail(404, 'Not found');
       if (FILES.has(path) || /^\/api\/(?:login|logout|status|ask|transcribe|speech|audit|decisions|investigations|review|live\/(?:session|delegate|close)|diagnostics(?:\/connection)?|workday\/(?:sync|status|report)|data\/snapshot)$/.test(path)) requestPath = FILES.has(path) ? 'static.asset' : path;
       if (path === '/health' && req.method === 'GET') { await ready; return json(res, 200, { ok: true, synthetic: true, version: VERSION }); }

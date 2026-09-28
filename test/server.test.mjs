@@ -66,3 +66,16 @@ test('upstream timeout cancels and returns a bounded safe error', async t => {
   const { url } = await setup(t, { apiKey: 'TEST_ONLY', timeoutMs: 20, fetchImpl: (_url, { signal }) => new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new Error('SECRET_SHOULD_NOT_LEAK')), { once: true })) });
   const res = await post(url, '/api/ask', { question: 'P01' }); assert.equal(res.status, 504); assert.ok(!(await res.text()).includes('SECRET'));
 });
+
+test('shared links reach sign-in while cross-site APIs, frames and posts stay blocked', async t => {
+  const {url}=await setup(t,{password:'synthetic-password-for-tests'});
+  const headers={'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document',referer:'https://example.org/'};
+  for(const path of ['/','/index.html?shared=1']){const response=await raw(url+path,{headers});assert.equal(response.status,200);assert.match(response.body,/Enter your workspace/);assert.doesNotMatch(response.body,/wi-source-data-js/);}
+  assert.equal((await raw(url+'/',{headers:{...headers,'sec-fetch-site':'same-site'}})).status,200);
+  for(const path of ['/api/status','/api/investigations','/api/decisions'])assert.equal((await raw(url+path,{headers})).status,403);
+  assert.equal((await raw(url+'/',{headers:{...headers,'sec-fetch-dest':'iframe'}})).status,403);
+  assert.equal((await raw(url+'/',{headers:{...headers,'sec-fetch-mode':'cors'}})).status,403);
+  assert.equal((await raw(url+'/',{method:'POST',headers})).status,403);
+  assert.equal((await raw(url+'/api/login',{method:'POST',headers})).status,403);
+  assert.equal((await raw(url+'/',{headers:{...headers,origin:'https://example.org'}})).status,403);
+});

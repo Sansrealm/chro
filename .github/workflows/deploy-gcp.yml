@@ -25,6 +25,7 @@ jobs:
           npx playwright-core install chromium --with-deps
           export CHRO_BROWSER="$(node --input-type=module -e "import {chromium} from 'playwright-core';console.log(chromium.executablePath())")"
           npm run test:browser
+          node scripts/check-shared-link.mjs
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: test
@@ -60,3 +61,4 @@ jobs:
           URL=https://chro-127316151094.us-central1.run.app
           echo "Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
           curl --fail --retry 5 "$URL/" | grep -q 'Enter your workspace'
+
