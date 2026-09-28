@@ -98,6 +98,14 @@ test('demo mode resolves a named back target locally', async t => {
   const { url } = await setup(t, { fetchImpl: () => { throw new Error('Unexpected network'); } });
   const named = await (await post(url, '/api/ask', { question: 'go back to the HR service queue' })).json();
   assert.equal(named.navigation.intent, 'metric'); assert.equal(named.action.metricId, 'O04');
-  const unknown = await (await post(url, '/api/ask', { question: 'go back to succession coverage' })).json();
+  const unknown = await (await post(url, '/api/ask', { question: 'go back to the share price' })).json();
   assert.equal(unknown.navigation.intent, 'clarify');
+});
+
+test('mocked API routes breakdowns while the server computes every segment', async t => {
+  const overrides = Object.fromEntries(routingSchema.properties.overrides.required.map(x => [x, null]));
+  const { url } = await setup(t, { apiKey: 'TEST_ONLY_NEVER_SENT', fetchImpl: async () => Response.json({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({ intent: 'breakdown', metricId: 'E03', caseId: null, overrides, breakdown: { dimension: 'region', segments: null, sort: 'desc', limit: 2, window: null } }) }] }] }) });
+  const res = await post(url, '/api/ask', { question: 'Where is attrition highest?' }); const a = await res.json();
+  assert.equal(res.status, 200); assert.equal(a.action.type, 'breakdown'); assert.equal(a.breakdown.rows.length, 2);
+  assert.ok(a.breakdown.rows[0].value >= a.breakdown.rows[1].value);
 });

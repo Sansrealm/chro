@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { answer, backAnswer, cases, choices, demoPlan, navigation, descriptor, limits, metricIds, modelPlan, routingSchema, scenario, summary, validatePlan, validateRequest } from '../engine.mjs';
+import { answer, backAnswer, cases, choices, demoPlan, dimensions, navigation, descriptor, limits, metricIds, modelPlan, routingSchema, scenario, summary, validatePlan, validateRequest } from '../engine.mjs';
 
 const request = (question, scope = {}) => validateRequest({ question, scope });
 const plan = (intent, metricId = null, caseId = null, overrides = {}) => ({ intent, metricId, caseId, overrides });
@@ -112,7 +112,7 @@ test('explicit written months resolve and unsupported verbal periods fail clearl
   assert.equal(request('Show P01 in Q3 2026').scope.period, 'quarter');
   assert.equal(request('Show P01 in third quarter of 2026').scope.period, 'quarter');
   assert.equal(request('What may workforce cost show?').scope.period, 'quarter');
-  for (const wording of ['Q2', 'quarter 2', 'Q3 2025', '2025', '2026', 'last quarter', 'this year', 'last 3 months', 'January 2025', 'January 2027', 'January', 'May', '2026-01-01']) assert.throws(() => request(`Show P01 in ${wording}`), undefined, wording);
+  for (const wording of ['Q2', 'quarter 2', 'Q3 2025', '2025', '2026', 'last quarter', 'this year', 'January 2025', 'January 2027', 'January', 'May', '2026-01-01']) assert.throws(() => request(`Show P01 in ${wording}`), undefined, wording);
   assert.throws(() => request('Show P01 in January 2026 and February 2026'));
 });
 test('unhandled numeric requests fail clearly even without scenario trigger words', () => {
@@ -130,4 +130,44 @@ test('navigation requests are recognised before routing; ordinary questions are 
   for (const q of ['What is the backlog?', 'How is attrition trending?', 'Explain E03', 'Show the overview', 'Why did people come back?']) assert.equal(navigation(q), null, q);
   const b = backAnswer({ question: 'go back', scope: {} });
   assert.equal(b.action.type, 'back'); assert.deepEqual(b.navigation, { type: 'back', target: false }); assert.deepEqual(b.facts, []);
+});
+
+test('"last N months" is a monthly trend window, not a verbal period filter', () => {
+  const r = validateRequest({ question: 'Show P01 in last 3 months', scope: {} });
+  assert.equal(r.window, 3); assert.equal(r.scope.period, 'quarter');
+  assert.throws(() => validateRequest({ question: 'Headcount over the last 13 months', scope: {} }));
+});
+
+test('breakdowns split one metric by function, region or month using the trusted engine', () => {
+  const ask = question => { const r = validateRequest({ question, scope: {} }); return answer(r, demoPlan(r)); };
+  const byRegion = ask('Show headcount by region');
+  assert.equal(byRegion.action.type, 'breakdown'); assert.equal(byRegion.breakdown.dimension, 'region');
+  assert.equal(byRegion.breakdown.rows.reduce((t, r) => t + r.value, 0), 8000);
+  for (const row of byRegion.breakdown.rows) assert.equal(row.value, descriptor('P01', { function: 'all', region: row.segment, period: 'quarter' }).value);
+  const ranked = ask('Which function has the highest attrition?');
+  assert.deepEqual(ranked.breakdown.rows.map(r => r.value), [...ranked.breakdown.rows.map(r => r.value)].sort((a, b) => b - a));
+  assert.match(ranked.answer, /highest Customer services/);
+  const compare = ask('Compare attrition in Engineering and Sales & marketing');
+  assert.deepEqual(compare.breakdown.rows.map(r => r.segment), ['Engineering', 'Sales & marketing']); assert.equal(compare.scope.function, 'all');
+  const top = ask('Top 3 regions by workforce cost');
+  assert.equal(top.breakdown.rows.length, 3); assert.equal(top.breakdown.sort, 'desc');
+  const trend = ask('Headcount trend over the last 6 months');
+  assert.deepEqual(trend.breakdown.rows.map(r => r.segment), [...dimensions.month.slice(-6)]); assert.match(trend.answer, /moved from/);
+  assert.equal(ask('First-year exit rate trend').title, 'First-year exit rate cannot be broken down');
+});
+test('unsupported splits are declined rather than silently dropped', () => {
+  const ask = question => { const r = validateRequest({ question, scope: {} }); return answer(r, demoPlan(r)); };
+  for (const [q, split] of [['Show the HR service backlog by priority', 'priority'], ['Women in leadership', 'job level'], ['What is the gender split in Engineering?', 'gender']]) assert.equal(ask(q).title, `A split by ${split} is not available yet`, q);
+  assert.equal(ask('Resolution time by priority').action.metricId, 'O06');
+  assert.equal(ask('Attrition in Engineering and EMEA').action.type, 'metric');
+  assert.equal(ask('What is attrition in Engineering, Sales & marketing?').action.type, 'breakdown');
+});
+test('breakdown plans are validated before any calculation', () => {
+  const b = (breakdown, extra = {}) => ({ intent: 'breakdown', metricId: 'E03', caseId: null, overrides: {}, breakdown: { dimension: 'function', segments: null, sort: null, limit: null, window: null, ...breakdown }, ...extra });
+  assert.equal(validatePlan(b({})).breakdown.dimension, 'function');
+  for (const bad of [{ dimension: 'tenure' }, { segments: ['Engineering'] }, { segments: ['Engineering', 'Legal'] }, { limit: 9 }, { sort: 'up' }, { window: 6 }]) assert.throws(() => validatePlan(b(bad)), undefined, JSON.stringify(bad));
+  assert.throws(() => validatePlan(b({}, { metricId: null })));
+  assert.throws(() => validatePlan({ intent: 'metric', metricId: 'E03', caseId: null, overrides: {}, breakdown: { dimension: 'function', segments: null, sort: null, limit: null, window: null } }));
+  const empty = Object.fromEntries(routingSchema.properties.overrides.required.map(x => [x, null]));
+  assert.equal(modelPlan({ intent: 'breakdown', metricId: 'P01', caseId: null, overrides: empty, breakdown: { dimension: 'month', segments: null, sort: null, limit: null, window: 6 } }).breakdown.window, 6);
 });
