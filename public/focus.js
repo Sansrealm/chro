@@ -16,6 +16,8 @@
   down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>',
   left: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>',
   right: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2"/></svg>',
+  close: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12 M18 6L6 18"/></svg>',
   more: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>'
  };
 
@@ -69,9 +71,9 @@
 
  // Capsule: one place to talk, type and read the current answer.
  const wrap = document.createElement('div'); wrap.className = 'fx-capsule-wrap';
- wrap.innerHTML = `<div class="fx-capsule" data-state="idle"><button type="button" class="fx-orb"></button><button type="button" class="fx-display" aria-controls="wi-conversation" aria-expanded="false"><span class="fx-text">Ask Workforce</span></button><button type="button" class="fx-end" hidden aria-label="End conversation">${svg.send}<span>End</span></button><button type="button" class="fx-nav fx-back" hidden aria-label="Previous view">${svg.left}</button><button type="button" class="fx-nav fx-fwd" hidden aria-label="Next view">${svg.right}</button><button type="button" class="fx-expand" hidden aria-controls="wi-conversation" aria-expanded="false" aria-label="Show answer detail">${svg.down}</button><span class="fx-progress" aria-hidden="true"></span></div><span class="fx-sr" role="status" aria-live="polite"></span>`;
+ wrap.innerHTML = `<div class="fx-capsule" data-state="idle"><button type="button" class="fx-orb"></button><button type="button" class="fx-display" aria-controls="wi-conversation" aria-expanded="false"><span class="fx-text">Ask Workforce</span></button><button type="button" class="fx-end" hidden aria-label="End conversation">${svg.send}<span>End</span></button><button type="button" class="fx-nav fx-back" hidden aria-label="Previous view">${svg.left}</button><button type="button" class="fx-count" hidden aria-haspopup="dialog" aria-controls="fx-session"></button><button type="button" class="fx-nav fx-fwd" hidden aria-label="Next view">${svg.right}</button><button type="button" class="fx-expand" hidden aria-controls="wi-conversation" aria-expanded="false" aria-label="Show answer detail">${svg.down}</button><span class="fx-progress" aria-hidden="true"></span></div><span class="fx-sr" role="status" aria-live="polite"></span>`;
  chip.after(wrap);
- const cap = wrap.querySelector('.fx-capsule'), orb = cap.querySelector('.fx-orb'), display = cap.querySelector('.fx-display'), text = cap.querySelector('.fx-text'), end = cap.querySelector('.fx-end'), expand = cap.querySelector('.fx-expand'), back = cap.querySelector('.fx-back'), fwd = cap.querySelector('.fx-fwd'), sr = wrap.querySelector('.fx-sr');
+ const cap = wrap.querySelector('.fx-capsule'), orb = cap.querySelector('.fx-orb'), display = cap.querySelector('.fx-display'), text = cap.querySelector('.fx-text'), end = cap.querySelector('.fx-end'), expand = cap.querySelector('.fx-expand'), back = cap.querySelector('.fx-back'), fwd = cap.querySelector('.fx-fwd'), count = cap.querySelector('.fx-count'), sr = wrap.querySelector('.fx-sr');
  sheet.classList.add('fx-sheet');
  const askToggle = root.querySelector('.vc-toggle');
  const ensureAskOpen = () => { if (askToggle && askToggle.getAttribute('aria-expanded') !== 'true') askToggle.click(); };
@@ -164,7 +166,10 @@
   display.setAttribute('aria-label', (d.state === 'answered' ? 'Current answer: ' : '') + d.text + (d.state === 'answered' ? '. Show detail' : d.state === 'idle' ? '. Type a question' : ''));
   end.hidden = !['listening', 'muted', 'connecting'].includes(d.state) && !(d.state === 'thinking' && d.live);
   expand.hidden = !hasAnswer() || live;
-  back.hidden = fwd.hidden = trail.length < 2 || live;
+  back.hidden = fwd.hidden = count.hidden = trail.length < 2 || live;
+  count.textContent = (pointer + 1) + '/' + trail.length; count.setAttribute('aria-label', 'Step ' + (pointer + 1) + ' of ' + trail.length + '. Open session history');
+  if (['recording', 'listening', 'muted', 'connecting'].includes(d.state) || d.live || /Transcrib/.test(d.text)) lastVoiceAt = Date.now();
+  if (!session.hidden) drawSession();
   back.disabled = pointer <= 0; fwd.disabled = pointer >= trail.length - 1;
   back.title = pointer > 0 ? 'Back to ' + trail[pointer - 1].label : ''; fwd.title = pointer < trail.length - 1 ? 'Forward to ' + trail[pointer + 1].label : '';
   if (d.text !== lastSpoken && d.state !== 'listening') { sr.textContent = d.text; lastSpoken = d.text; }
@@ -177,7 +182,7 @@
  // Session trail: every screen change (asked, typed or tapped) is a step. The trail is append-only;
  // stepping back moves a pointer and a new step is always added at the end, so nothing is lost.
  const app = root.__WI_APP, main = q('#wi-main');
- const trail = []; let pointer = -1, restoring = null, pendingAnswer = null, looseAnswer = null;
+ const trail = [], log = []; let lastVoiceAt = 0, pendingVoice = false, pointer = -1, restoring = null, pendingAnswer = null, looseAnswer = null;
  const copy = v => { try { return structuredClone(v); } catch { return JSON.parse(JSON.stringify(v)); } };
  function viewOf() { const s = app.state; return { page: s.page, domain: s.domain, people: s.people, operations: s.operations, metric: s.metric, trustTab: s.trustTab, function: s.function, region: s.region, period: s.period, audience: s.audience, decide: copy(s.decide) }; }
  const keyOf = v => [v.page, v.page === 'monitor' ? v.domain + '/' + (v[v.domain] || '') : '', v.page === 'investigate' ? v.metric : '', v.page === 'decide' ? (v.decide?.caseId || '') + '/' + (v.decide?.subview || '') : '', v.page === 'trust' ? v.trustTab : '', v.function, v.region, v.period, v.audience].join('|');
@@ -193,8 +198,9 @@
   const v = viewOf(), key = keyOf(v);
   if (restoring !== null && trail[restoring]) { pointer = restoring; restoring = null; trail[pointer].view = v; schedule(); return; }
   restoring = null;
-  if (pointer >= 0 && trail[pointer].key === key) { trail[pointer].view = v; if (pendingAnswer) { trail[pointer].answer = pendingAnswer; pendingAnswer = null; looseAnswer = null; } schedule(); return; }
-  trail.push({ key, view: v, label: labelOf(v), answer: pendingAnswer, at: Date.now() }); pendingAnswer = null; looseAnswer = null;
+  if (pointer >= 0 && trail[pointer].key === key) { trail[pointer].view = v; if (pendingAnswer) { trail[pointer].answer = pendingAnswer; trail[pointer].voice = pendingVoice; trail[pointer].askedAt = Date.now(); pendingAnswer = null; looseAnswer = null; } schedule(); return; }
+  const entry = { key, view: v, label: labelOf(v), answer: pendingAnswer, voice: pendingAnswer ? pendingVoice : false, start: !trail.length && !log.length, at: Date.now() };
+  trail.push(entry); log.push({ entry }); if (log.length > 120) log.shift(); pendingAnswer = null; looseAnswer = null;
   if (trail.length > 60) trail.shift();
   pointer = trail.length - 1; schedule();
  }
@@ -235,6 +241,52 @@
   if (idx < 0) idx = textMatch(nav.target);
   return idx >= 0 ? restore(idx, { announce: true }) : false;
  }
+ // Session layer: a toggled timeline of the steps in this tab. Not saved anywhere.
+ const session = document.createElement('aside');
+ session.id = 'fx-session'; session.className = 'fx-session'; session.hidden = true; session.setAttribute('role', 'dialog'); session.setAttribute('aria-labelledby', 'fx-session-title');
+ session.innerHTML = `<div class="fx-session-head"><div><h2 id="fx-session-title">This session</h2><p class="fx-session-sub"></p></div><button type="button" class="fx-session-close" aria-label="Close session history">${svg.close}</button></div><ol class="fx-session-list"></ol><form class="fx-session-ask"><label for="fx-session-q">Ask or correct a question</label><div><input id="fx-session-q" type="text" maxlength="1200" autocomplete="off" placeholder="e.g. Compare Engineering by region"><button type="submit" aria-label="Ask">${svg.right}</button></div></form>`;
+ const scrim = document.createElement('div'); scrim.className = 'fx-scrim'; scrim.hidden = true;
+ root.append(scrim, session);
+ const list = session.querySelector('.fx-session-list'), sub = session.querySelector('.fx-session-sub'), input = session.querySelector('#fx-session-q');
+ const clock = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+ const pageName = { monitor: 'Monitor', investigate: 'Investigate', decide: 'Decide', trust: 'Data & coverage' };
+ let sessionOpener = null;
+ function openSession() { sessionOpener = document.activeElement; setSheet(false); setMenu(false); setFilters(false); drawSession(); session.hidden = scrim.hidden = false; count.setAttribute('aria-expanded', 'true'); session.querySelector('.fx-session-close').focus(); requestAnimationFrame(() => { const now = list.querySelector('[aria-current]'); now?.scrollIntoView({ block: 'nearest' }); }); }
+ function closeSession() { if (session.hidden) return; session.hidden = scrim.hidden = true; count.setAttribute('aria-expanded', 'false'); (sessionOpener && document.contains(sessionOpener) ? sessionOpener : display).focus?.({ preventScroll: true }); }
+ count.addEventListener('click', () => session.hidden ? openSession() : closeSession());
+ session.querySelector('.fx-session-close').addEventListener('click', closeSession);
+ scrim.addEventListener('click', closeSession);
+ session.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeSession(); } });
+ session.querySelector('.fx-session-ask').addEventListener('submit', e => { e.preventDefault(); const text = input.value.trim(); if (!text) return; input.value = ''; closeSession(); window.WI_CONVERSATION?.ask?.(text); });
+ function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+ function editAsk(question) { input.value = question; input.focus(); input.select(); }
+ function drawSession() {
+  const asked = log.filter(x => x.ask || x.entry.answer?.question).length;
+  sub.textContent = `${asked} question${asked === 1 ? '' : 's'} · ${trail.length} view${trail.length === 1 ? '' : 's'} · kept in this tab only, not saved`;
+  list.replaceChildren();
+  log.forEach(item => {
+   const li = el('li', 'fx-step');
+   if (item.ask) {
+    const a = item.ask; li.classList.add('fx-step-ask');
+    li.append(el('span', 'fx-step-meta', clock.format(a.at) + (a.voice ? ' · heard by voice' : '') + ' · no view opened'), el('strong', 'fx-step-q', '“' + a.question + '”'), el('span', 'fx-step-a', a.title));
+    const edit = el('button', 'fx-step-link', a.voice ? 'Misheard? Edit and re-ask' : 'Edit and re-ask'); edit.type = 'button'; edit.addEventListener('click', () => editAsk(a.question)); li.append(edit);
+   } else {
+    const e = item.entry, i = trail.indexOf(e), v = e.view, q2 = e.answer?.question;
+    if (!q2) li.classList.add('fx-step-tap');
+    if (i === pointer) { li.setAttribute('aria-current', 'step'); li.classList.add('fx-step-now'); }
+    const where = [v.function === 'all' ? 'All functions' : v.function, v.region === 'all' ? '' : v.region].filter(Boolean).join(', ');
+    li.append(el('span', 'fx-step-meta', [clock.format(e.askedAt || e.at), pageName[v.page] || v.page, where].join(' · ') + (q2 && e.voice ? ' · heard by voice' : '') + (i === pointer ? ' · now' : '')));
+    li.append(el('strong', 'fx-step-q', q2 ? '“' + q2 + '”' : e.label));
+    if (e.answer) li.append(el('span', 'fx-step-a', headlineOf(e.answer)));
+    else li.append(el('span', 'fx-step-a', e.start ? 'Where this session started' : 'Opened by tapping'));
+    const row = el('div', 'fx-step-actions');
+    if (i >= 0 && i !== pointer) { const go = el('button', 'fx-step-link', 'Return to this view →'); go.type = 'button'; go.addEventListener('click', () => { closeSession(); restore(i, { announce: true }); }); row.append(go); }
+    if (q2) { const edit = el('button', 'fx-step-link fx-step-quiet', e.voice ? 'Misheard? Edit and re-ask' : 'Edit and re-ask'); edit.type = 'button'; edit.addEventListener('click', () => editAsk(q2)); row.append(edit); }
+    if (row.childElementCount) li.append(row);
+   }
+   list.append(li);
+  });
+ }
  window.WI_FOCUS = Object.freeze({ navigate, trail: () => trail.map(({ label, at, answer }) => ({ label, at, question: answer?.question || null })), position: () => pointer });
  addEventListener('wi-source-updated', () => { trail.forEach(e => { e.answer = null; }); looseAnswer = null; pendingAnswer = null; schedule(); });
  // A new answer takes the dashboard to its view; the capsule keeps the headline. Answers without a view open the sheet.
@@ -246,9 +298,10 @@
   lastAnswer = now;
   notice = null; clearTimeout(noticeTimer);
   const data = window.WI_CONVERSATION?.getAnswer?.(), primary = q('#vc-actions .vc-primary');
+  pendingVoice = Date.now() - lastVoiceAt < 90000;
   // Clarifications have no facts and stay in the sheet rather than moving the dashboard.
   if (primary && data?.facts?.length) { pendingAnswer = data; looseAnswer = null; primary.click(); setSheet(false); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120); }
-  else { pendingAnswer = null; looseAnswer = data; setSheet(true); }
+  else { pendingAnswer = null; looseAnswer = data; setSheet(true); if (data?.question) { log.push({ ask: { question: data.question, title: data.title, voice: pendingVoice, at: Date.now() } }); if (log.length > 120) log.shift(); } }
   schedule();
  }).observe(q('#vc-result') || sheet, { attributes: true, childList: true, subtree: true, characterData: true });
  record();

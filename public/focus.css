@@ -100,6 +100,46 @@
 #wi-app .fx-sheet .vc-briefing{margin-top:14px;padding-top:14px}
 #wi-app .fx-sheet .vc-briefing h4{font-size:13px}
 
+/* Step counter between the arrows opens the session layer */
+#wi-app .fx-count{flex-shrink:0;height:28px;min-width:34px;border:0;border-radius:14px;background:transparent;color:var(--fx-muted);font-size:11.5px;font-variant-numeric:tabular-nums;padding:0 6px}
+#wi-app .fx-count[hidden]{display:none}
+#wi-app .fx-count:hover,#wi-app .fx-count[aria-expanded=true]{background:#fff;color:var(--fx-ink)}
+
+/* Session layer: a timeline drawer, not a chat log */
+#wi-app .fx-scrim{position:fixed;inset:0;z-index:80;background:#2228212e}
+#wi-app .fx-scrim[hidden],#wi-app .fx-session[hidden]{display:none}
+#wi-app .fx-session{position:fixed;z-index:81;top:0;right:0;bottom:0;width:min(420px,100vw);box-sizing:border-box;display:flex;flex-direction:column;background:var(--fx-panel);border-left:1px solid var(--fx-line);box-shadow:-18px 0 40px #20272024}
+#wi-app .fx-session-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 22px 16px;border-bottom:1px solid #ebece4}
+#wi-app .fx-session-head h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.3px}
+#wi-app .fx-session-sub{margin:4px 0 0;font-size:12px;color:var(--fx-muted)}
+#wi-app .fx-session-close{flex-shrink:0;width:40px;height:40px;border:1px solid var(--fx-line);border-radius:50%;background:#fff;color:var(--fx-ink);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+#wi-app .fx-session-close svg{width:14px;height:14px}
+#wi-app .fx-session-list{flex:1;overflow:auto;list-style:none;margin:0;padding:18px 22px 8px}
+#wi-app .fx-step{position:relative;display:flex;flex-direction:column;gap:4px;padding:0 0 20px 24px}
+#wi-app .fx-step::before{content:"";position:absolute;left:4px;top:6px;width:9px;height:9px;border-radius:50%;background:#9aa092}
+#wi-app .fx-step::after{content:"";position:absolute;left:8px;top:19px;bottom:-2px;width:1.5px;background:#e3e4dc}
+#wi-app .fx-step:last-child::after{display:none}
+#wi-app .fx-step-meta{font-size:11px;color:var(--fx-muted)}
+#wi-app .fx-step-q{font-size:14.5px;font-weight:600;line-height:1.35}
+#wi-app .fx-step-a{font-size:13px;color:#4c5549}
+#wi-app .fx-step-tap .fx-step-q{font-weight:500;color:#4c5549}
+#wi-app .fx-step-tap::before{background:#fff;border:1.5px solid #b3b8aa;box-sizing:border-box}
+#wi-app .fx-step-ask::before{background:#fff;border:1.5px dashed var(--fx-amber);box-sizing:border-box}
+#wi-app .fx-step-now{background:#f3f6ec;border:1px solid #d9e3c9;border-radius:12px;padding:10px 12px 12px 34px;margin:0 0 18px -10px}
+#wi-app .fx-step-now::before{left:14px;top:15px;background:#3d6242;box-shadow:0 0 0 4px #eaf0df}
+#wi-app .fx-step-now::after{display:none}
+#wi-app .fx-step-actions{display:flex;flex-wrap:wrap;gap:4px 14px}
+#wi-app .fx-step-link{align-self:flex-start;border:0;background:transparent;color:#3d6242;font:inherit;font-size:12.5px;font-weight:600;padding:5px 0;min-height:32px;cursor:pointer}
+#wi-app .fx-step-link:hover{text-decoration:underline}
+#wi-app .fx-step-quiet{color:var(--fx-muted);font-weight:500}
+#wi-app .fx-session-ask{padding:14px 22px 22px;border-top:1px solid #ebece4;display:flex;flex-direction:column;gap:7px}
+#wi-app .fx-session-ask label{font-size:12px;color:var(--fx-muted)}
+#wi-app .fx-session-ask div{display:flex;gap:8px}
+#wi-app .fx-session-ask input{flex:1;min-width:0;height:44px;box-sizing:border-box;border:1px solid var(--fx-line);border-radius:22px;background:#f5f4ef;padding:0 16px;font:inherit;font-size:14px;color:var(--fx-ink)}
+#wi-app .fx-session-ask button{flex-shrink:0;width:44px;height:44px;border:0;border-radius:50%;background:var(--fx-green);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+#wi-app .fx-session-ask button svg{width:14px;height:14px}
+#wi-app .fx-session :focus-visible{outline:3px solid #bf7f25;outline-offset:2px}
+
 /* Narrow screens: the capsule takes its own row under the header (player-strip fallback) */
 @media(max-width:1279px){
  #wi-app .wi-toolbar{flex-wrap:wrap}
@@ -110,4 +150,4 @@
  #wi-app .fx-scope{max-width:100%;overflow:hidden;text-overflow:ellipsis}
  #wi-app .wi-tools{flex-wrap:wrap}
 }
-@media print{#wi-app .fx-capsule-wrap,#wi-app .fx-scope,#wi-app .fx-more,#wi-app .fx-menu,#wi-app #wi-conversation{display:none!important}}
+@media print{#wi-app .fx-capsule-wrap,#wi-app .fx-scope,#wi-app .fx-more,#wi-app .fx-menu,#wi-app #wi-conversation,#wi-app .fx-session,#wi-app .fx-scrim{display:none!important}}
