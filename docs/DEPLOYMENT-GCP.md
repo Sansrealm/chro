@@ -34,4 +34,6 @@ For rollback, use Cloud Run's Revisions tab to direct traffic to the previous su
 
 ## Verification
 
-Local automated suite: 87 passing tests, including cloud concurrency, restart persistence, generation preconditions and write-failure behavior. Private GCS writes and reads were exercised using the actual bucket. See `CONTINUATION-REVIEW.md`, `REDESIGN.md` and the browser screenshots for presentation review. Cloud deployment verification is recorded after the workflow runs.
+Local automated suite: 88 passing tests, including cloud concurrency, restart persistence, generation preconditions and write-failure behavior. Private GCS writes and reads were exercised using the actual bucket. See `CONTINUATION-REVIEW.md`, `REDESIGN.md` and the browser screenshots for presentation review. Cloud deployment verification is recorded after the workflow runs.
+
+First deployment succeeded through [GitHub Actions run 36471158707](https://github.com/kalyan2212/chro/actions/runs/36471158707), commit `0438b52`, revision `chro-00001-79p`. Live Chrome verification at 1920×1080 confirmed Monitor, Investigate and Decide, secure HttpOnly sign-in cookies, unauthenticated API rejection (401), cloud persistence, save/reload with pinned evidence, mobile navigation and no browser JavaScript errors. Screenshots and machine-readable results are in `docs/cloud/`. No upstream model call was made, so model entitlement and real microphone/speaker behavior remain unverified. The six offline preflight checks also passed.

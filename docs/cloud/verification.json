@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-28T19:19:54.546Z",
+  "url": "https://chro-127316151094.us-central1.run.app",
+  "persistence": "cloud-storage",
+  "authentication": "password",
+  "unauthenticatedApi": 401,
+  "secureCookie": true,
+  "savedInvestigationId": "ba529c38-e82d-4ef2-baa0-8ca4a4e539be",
+  "evidenceCount": 1,
+  "investigationCount": 1,
+  "browserErrors": [],
+  "providerCallsMade": false
+}

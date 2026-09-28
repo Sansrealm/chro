@@ -84,3 +84,13 @@ test('corrupted persistent state causes a visible startup error', async () => {
   await assert.rejects(createWorkday({ baseline, storageDir: dir }).init(), /Cannot load synthetic Workday state/);
   assert.equal(await readFile(join(dir, 'workday-synthetic-state.json'), 'utf8'), '{not json');
 });
+
+test('cloud source refresh rejects overlapping stale commits and restores the winner', async () => {
+  let data=null,generation='0';
+  const objectStore={async read(){return {data:structuredClone(data),generation};},async write(name,next,expected){if(expected!==generation)throw Object.assign(Error('conflict'),{status:409});data=structuredClone(next);generation=String(Number(generation)+1);return generation;}};
+  const a=createWorkday({baseline,objectStore}),b=createWorkday({baseline,objectStore});await Promise.all([a.init(),b.init()]);
+  const results=await Promise.allSettled([a.sync({batch:'correction'}),b.sync({batch:'baseline'})]);
+  assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(results.find(r=>r.status==='rejected').reason.status,409);
+  const restored=createWorkday({baseline,objectStore});await restored.init();assert.equal(restored.status().sourceVersion,data.version);assert.equal(restored.status().history.length,1);
+  await a.refresh();await b.refresh();assert.equal(a.status().sourceVersion,b.status().sourceVersion);
+});
