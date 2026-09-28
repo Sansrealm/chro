@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.state/
+*.log
+node_modules/
+*.webm
+preflight-results*.json
+.review-state/
+.cloud-local/
+gha-creds-*.json
+docs/redesign/originals/
+docs/review-originals/*
+!docs/review-originals/public-index.html
+scripts/apply-cloud-storage.mjs

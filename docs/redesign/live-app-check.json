@@ -1,0 +1,12 @@
+{
+  "at": "2026-09-28T18:09:11.998Z",
+  "url": "http://127.0.0.1:8787",
+  "screens": [
+    "monitor",
+    "investigate",
+    "decide"
+  ],
+  "investigationsEndpoint": 200,
+  "browserErrors": [],
+  "providerCallsMade": false
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "workforce-preflight.v1",
+  "at": "2026-09-25T21:25:41.941Z",
+  "node": "v24.19.0",
+  "synthetic": true,
+  "externalCallsEnabled": {
+    "openai": false,
+    "claude": false
+  },
+  "checks": [
+    {
+      "name": "Local HTTP service and dashboard assets",
+      "status": "passed",
+      "detail": "Served initialized HTML and all four experience modules."
+    },
+    {
+      "name": "Synthetic source coverage and report pagination",
+      "status": "passed",
+      "detail": "240 monthly function/region cells; 20 mature cohorts; paged report retrieval."
+    },
+    {
+      "name": "Versioned correction, replay and rejected-batch rollback",
+      "status": "passed",
+      "detail": "Correction adds 17 goal submissions; repeat is idempotent; invalid input preserves the valid snapshot."
+    },
+    {
+      "name": "Saved decision, evidence and server-calculated downside",
+      "status": "passed",
+      "detail": "Saved active assumptions, observed context, pinned evidence, capture and audit metadata."
+    },
+    {
+      "name": "Offline method review",
+      "status": "passed",
+      "detail": "Review attached; calculated figures remain unchanged."
+    },
+    {
+      "name": "Deterministic question and downside answer",
+      "status": "passed",
+      "detail": "The 0.5 pp retention case reports −$90k net modeled value."
+    }
+  ],
+  "browserChecks": "Not run: use Connections & readiness, Continuous voice and narrated WebM export on the presentation machine.",
+  "passed": true
+}

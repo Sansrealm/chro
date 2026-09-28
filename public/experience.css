@@ -1,0 +1,159 @@
+﻿/* Workforce Intelligence — editorial, warm, luminous. Local assets only. */
+html{background:#eeede9;color-scheme:light}
+#wi-app{--wi-bg:#f5f4ef;--wi-panel:#fffefa;--wi-ink:#222821;--wi-muted:#62675f;--wi-line:#dcded4;--wi-accent:#3d6242;--wi-soft:#eaf0df;--wi-blue:#557da4;--wi-bluesoft:#ebf0f7;--wi-red:#a73e36;--wi-redsoft:#fae9e2;--wi-amber:#876028;--wi-ambersoft:#f5edda;--wi-track:#e4e7dc;--wi-violet:#8a6b9c;font-family:"Segoe UI Variable", "Segoe UI",sans-serif;max-width:2200px;min-height:100vh}
+#wi-app .wi-shell{grid-template-columns:224px minmax(0,1fr)}
+#wi-app .wi-sidebar{background:#202720;color:#e4e8de;padding:30px 15px 22px;border-right:1px solid #394235}
+#wi-app .wi-brand{font-size:20px;letter-spacing:-.7px;gap:12px;margin:0 9px 30px}
+#wi-app .wi-brand span:not(.wi-monogram){color:#a0ad98;font-size:9px;letter-spacing:2.1px}
+#wi-app .wi-monogram{background:#dce9b8;color:#263325;width:38px;height:42px;border:0;border-radius:13px;font-size:28px}
+#wi-app .wi-workspace-name{border-color:#3a4335;margin-bottom:28px;padding:21px 12px;font-size:14px}
+#wi-app .wi-workspace-name span,#wi-app .wi-side-caption{color:#a3b099;font-size:9px;letter-spacing:1.6px}
+#wi-app .wi-side-caption{margin-bottom:14px}
+#wi-app .wi-domains{gap:7px}
+#wi-app .wi-domains button{font-size:13px;min-height:47px;border-radius:9px;color:#c9d1c3;padding:11px 13px;transition:background .2s,color .2s;gap:13px}
+#wi-app .wi-domains button:hover{background:#303b2c;color:#fff}
+#wi-app .wi-domains button[aria-current=page]{background:#deebbd;color:#253123;box-shadow:none;font-weight:600}
+#wi-app .wi-nav-number{display:grid;place-items:center;width:19px;flex:0 0 19px;color:inherit!important}
+#wi-app .wi-nav-number svg{width:19px;height:19px}
+#wi-app .wi-side-link{border-color:#3a4335;color:#d3ddc9;font-size:12px}
+#wi-app .wi-demo-note,#wi-app .wi-demo-note span{color:#a8b19f}
+#wi-app .wi-toolbar{background:#fffef9eb;backdrop-filter:blur(18px);border-color:var(--wi-line);padding:15px 30px;min-height:82px;box-shadow:none;gap:12px}
+#wi-app .wi-workflow{gap:3px;background:#eff0e9;padding:4px;border:1px solid #e2e4d9;border-radius:30px}
+#wi-app .wi-workflow button{border-radius:24px;font-size:13px;padding:10px 15px;gap:8px;min-height:38px}
+#wi-app .wi-workflow button[aria-current=page]{background:#283728;color:#f6f8ef;box-shadow:0 2px 4px #17241515}
+#wi-app .wi-workflow button[aria-current=page] span{color:#d3e6b2}
+#wi-app .wi-tools{gap:7px}
+#wi-app .wi-btn{font-size:12px;border-radius:22px;min-height:38px;padding:9px 14px;border-color:#d5dacb;transition:transform .18s,background .18s,box-shadow .18s}
+#wi-app .wi-btn:hover{background:#ecf0e1;border-color:#a3b391;transform:translateY(-1px)}
+#wi-app .wi-btn.primary,#wi-app #wi-present{background:#273b2a;color:#fbfff3;border-color:#273b2a}
+#wi-app .wi-btn.primary:hover,#wi-app #wi-present:hover{background:#40563a;color:white}
+#wi-app .wi-demo-tag{font-size:10px;background:transparent;color:#69745e;padding:0 9px;letter-spacing:.1px;display:flex;align-items:center;gap:6px}
+#wi-app .wi-demo-tag::before{content:"";width:6px;height:6px;background:#859765;border-radius:50%}
+#wi-app .vc-toggle{background:#e6eecf;color:#34462d;border-color:#d3dfbb}
+#wi-app .wi-filterbar{background:#f5f4ef;padding:11px 30px;border-bottom:1px solid var(--wi-line);min-height:61px}
+#wi-app .wi-filter label{font-size:11px;color:#6d7167}
+#wi-app .wi-filter select{background:#fffefa;border-radius:7px;font-size:12px;min-height:33px;border-color:#daddd0}
+#wi-app .wi-audiences{background:#eaece2;border:0;border-radius:20px;padding:3px}
+#wi-app .wi-audiences button{border-radius:18px;font-size:11px;padding:6px 12px}
+#wi-app .wi-audiences button[aria-pressed=true]{background:#fffef8;color:#263524;box-shadow:0 2px 5px #2836200c}
+#wi-app .wi-main{padding:26px 30px 40px;max-width:1800px}
+#wi-app .wi-head{margin-bottom:24px;gap:20px}
+#wi-app h1{font-size:clamp(32px,3vw,48px);font-weight:450;letter-spacing:-1.8px;line-height:1.07}
+#wi-app h2{font-weight:550;font-size:20px;letter-spacing:-.5px}
+#wi-app h3{font-weight:550}
+#wi-app .wi-eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:600;margin-bottom:12px;color:#596b47}
+#wi-app .wi-lead{font-size:14px;line-height:1.65}
+#wi-app .wi-launch{position:relative;isolation:isolate;overflow:hidden;min-height:255px;border-radius:17px;background:linear-gradient(110deg,#edeedc 0%,#f1e7d9 55%,#f2ddc4 100%);padding:29px 34px 31px;margin-bottom:20px;align-items:center;border:1px solid #e6ddcc}
+#wi-app .wi-launch>div:first-child{position:relative;z-index:2;max-width:59%}
+#wi-app .wi-launch h1{font-size:clamp(40px,4.2vw,75px);font-weight:400;letter-spacing:-3px;max-width:780px;line-height:1.01;margin-bottom:14px;text-wrap:balance}
+#wi-app .wi-launch .wi-lead{max-width:555px;font-size:14px;color:#555c4b}
+#wi-app .wi-launch>.wi-tag{position:absolute;right:24px;top:20px;background:#fffdf685;border:1px solid #fff9ec;z-index:3;font-size:11px;border-radius:20px;padding:5px 10px;color:#5a5d50}
+#wi-app .wi-orbit-art{position:absolute;right:-5px;top:-44px;width:47%;height:340px;pointer-events:none;z-index:0}
+#wi-app .wi-orbit-art svg{width:100%;height:100%;overflow:visible}
+#wi-app .wi-orbit-art>span{position:absolute;bottom:16px;right:36px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#8a684d}
+#wi-app .wi-orbit-mesh{transform-origin:310px 185px;animation:wi-orbit-drift 35s linear infinite}
+@keyframes wi-orbit-drift{to{transform:rotate(360deg)}}
+#wi-app .wi-grid4{gap:14px}
+#wi-app .wi-kpi{border-radius:12px;border-color:#dddfd4;background:#fffef9;padding:19px 21px;transition:box-shadow .2s,transform .2s,border-color .2s}
+#wi-app button.wi-kpi:hover{transform:translateY(-3px);border-color:#9ead83;box-shadow:0 8px 24px #31402010}
+#wi-app .wi-kpi-label{font-size:12px;color:#57624e;font-weight:500}
+#wi-app .wi-kpi-arrow{border:1px solid #e3e6d9;border-radius:50%;width:23px;height:23px;display:grid;place-items:center;font-size:12px;background:#f6f7ef;color:#536645}
+#wi-app .wi-number{font-size:38px;font-weight:450;letter-spacing:-1.6px;margin:6px 0 8px;line-height:1.15}
+#wi-app .wi-kpi-detail{font-size:12px;line-height:1.5}
+#wi-app .wi-kpi-meta{font-size:10px;border:0;padding:0;margin-top:7px;color:#7c8175}
+#wi-app .wi-overview>.wi-split{margin-top:20px;grid-template-columns:minmax(0,1.62fr) minmax(310px,1fr);align-items:start;gap:20px}
+#wi-app .wi-agenda{display:grid;gap:16px;min-width:0}
+#wi-app .wi-hero{position:relative;background:#2b3b2c;border-radius:13px;padding:22px 24px;margin:0;grid-template-columns:1fr;gap:17px;overflow:hidden;border:1px solid #374b34}
+#wi-app .wi-hero::after{content:"";position:absolute;right:-50px;bottom:-100px;width:220px;height:220px;background:radial-gradient(circle,#82945340,transparent 65%);pointer-events:none}
+#wi-app .wi-hero .wi-eyebrow{color:#bbcf9e;font-size:9px;letter-spacing:1.6px}
+#wi-app .wi-hero h2{font-size:25px;font-weight:450;line-height:1.2;letter-spacing:-.7px;max-width:410px}
+#wi-app .wi-hero p{font-size:12px;line-height:1.65;color:#d0d9c5}
+#wi-app .wi-hero .wi-btn{background:#deebb9;color:#293b24;font-size:12px;border:0;justify-self:start;padding:10px 16px;z-index:1}
+#wi-app .wi-panel{border-radius:13px;padding:24px;border-color:#dfe1d6;background:#fffefa;box-shadow:0 4px 15px #28362002}
+#wi-app .wi-panel-head{margin-bottom:18px}
+#wi-app .wi-panel-head p{font-size:12px;margin-top:6px}
+#wi-app .wi-tabs{gap:6px;margin-bottom:18px;padding-bottom:13px}
+#wi-app .wi-tabs button{font-size:12px;border-radius:18px;padding:8px 13px}
+#wi-app .wi-tabs button[aria-pressed=true]{background:#e9efdb;color:#3c5030;border-color:#d6dfc5}
+#wi-app .wi-overview .wi-chart{height:265px}
+#wi-app .wi-chart text{fill:#64705e;font-size:13px}
+#wi-app .wi-chart svg>path{stroke-width:2.5}
+#wi-app .wi-legend{font-size:12px;line-height:1.6}
+#wi-app .wi-source{font-size:11px;line-height:1.6}
+#wi-app .wi-signal h3{font-size:13px;font-weight:600;line-height:1.5}
+#wi-app .wi-signal p{font-size:12px}
+#wi-app .wi-signal button{border-radius:50%;width:30px;height:30px;background:#f7f8f0;color:#435b36}
+#wi-app .wi-signal{gap:10px;padding:15px 0}
+#wi-app .wi-signal-line{border-radius:9px;width:3px}
+#wi-app .wi-tag{border-radius:6px;font-size:11px;padding:5px 8px}
+#wi-app .wi-table th{font-size:11px;text-transform:uppercase;letter-spacing:.7px;padding:12px 10px}
+#wi-app .wi-table td{font-size:13px;padding:15px 10px}
+#wi-app .wi-table tbody tr:hover{background:#f5f7ed}
+#wi-app .wi-heat .wi-cell{border-radius:7px;min-height:59px}
+#wi-app .wi-note{border-radius:0 8px 8px 0;font-size:13px;line-height:1.7}
+#wi-app .wi-investigation-save{border-radius:12px;padding:15px 20px;background:#edf0e4;border-color:#d7dfc6}
+#wi-app .wi-investigation-save summary{font-size:14px;color:#34472e}
+#wi-app .wi-notebook-grid input,#wi-app .wi-notebook-grid textarea,#wi-app .wi-notebook-grid select{border-radius:8px;background:#fffefa}
+#wi-app .wi-value-pair{margin:26px 0}
+#wi-app .wi-big{font-size:56px;font-weight:400;letter-spacing:-2px}
+#wi-app .wi-evidence-item{border-radius:9px;padding:17px;background:#fcfcf6}
+#wi-app .wi-evidence-item strong{font-size:14px}
+#wi-app .wi-bar-label{font-size:13px}
+#wi-app .wi-track{height:9px;border-radius:6px}
+#wi-app .wi-fill{border-radius:6px;background:var(--wi-accent)}
+#wi-app .wi-decide{gap:18px}
+#wi-app .wi-decide h1{font-size:clamp(32px,3vw,46px);font-weight:450;letter-spacing:-1.6px;margin:.15em 0}
+#wi-app .wi-decide-tabs{padding-bottom:15px;border-bottom:1px solid var(--wi-line);gap:10px}
+#wi-app .wi-decide-case-nav{gap:8px}
+#wi-app .wi-decide-case-nav .wi-btn{background:#fffefa;border-color:#d8dccd;border-radius:20px;font-size:12px;padding:9px 14px}
+#wi-app .wi-decide-case-nav .wi-btn[aria-pressed=true]{background:#e5edcf;border-color:#c2d3a4;color:#33472e}
+#wi-app .wi-decide .wi-kpi{border-radius:11px;padding:19px;background:#f4f5ec}
+#wi-app .wi-decide-case-body>.wi-grid3 .wi-kpi:last-child{background:#e7eed9;border-color:#c5d4ac}
+#wi-app .wi-decide-case-body>.wi-grid3 .wi-kpi.is-negative{background:#fae9e2;border-color:#daa297}
+#wi-app .wi-decide .wi-inset{border-radius:10px;background:#f1f2e9;padding:18px 22px}
+#wi-app .wi-decide .wi-label{font-weight:500;font-size:13px}
+#wi-app .wi-lab-viz{border-radius:12px;background:#f6f7ef;padding:22px}
+#wi-app .wi-decide .wi-lab-viz-head h3{font-size:17px;font-weight:550}
+#wi-app .wi-decide .wi-lab-viz-head p,#wi-app .wi-decide .wi-lab-viz-foot,#wi-app .wi-decide .wi-lab-viz-caption{font-size:12px}
+#wi-app .wi-lab-fill{background:#678257}
+#wi-app .wi-lab-fill.required,#wi-app .wi-lab-fill.demand{background:#888c7d}
+#wi-app .wi-lab-fill.ready,#wi-app .wi-lab-fill.accepted,#wi-app .wi-lab-fill.selected{background:#3d6242}
+#wi-app .wi-input,#wi-app .wi-select{border-radius:8px;background:#fffefa}
+#wi-app .wi-footer{background:#eeefe6;font-size:10px;padding:18px 30px;border-color:#dfe2d4}
+#wi-app .wi-tour{background:#e9eedc;border-color:#cdd7bb;padding:18px 30px}
+#wi-app .ww-panel,#wi-app .vc-panel{border-radius:15px;border-color:#ced6c1;box-shadow:0 8px 30px #28362008;background:#fffefa}
+#wi-app .ww-heading h2,#wi-app .vc-head h2,#wi-app .vc-result h3{font-family:inherit;font-weight:450;font-size:28px;letter-spacing:-.7px}
+#wi-app .vc-head{background:#2b3b2c;color:#f8fbf0}
+#wi-app .vc-head p{color:#d2dec6}
+#wi-app .vc-eyebrow{color:#bfcea7}
+#wi-app .vc-form .vc-submit,#wi-app .ww-panel button.ww-primary{background:#334a31;border-color:#334a31;color:#fff}
+#wi-app .ww-panel button,#wi-app .wo-close,#wi-app .vc-form button,#wi-app .vc-actions button,#wi-app .vc-followups button{border-radius:20px}
+#wi-app .wo-card{border-radius:13px}
+#wi-app #wi-live{font-family:inherit;color:var(--wi-ink);max-width:none;margin:22px 30px;padding:0}
+#wi-app #wi-live .wl-panel{background:#f1f4e9;border:1px solid #ced9bf;border-radius:15px;padding:25px}
+#wi-app #wi-live h2{font-family:inherit;font-size:29px;letter-spacing:-.8px}
+#wi-app #wi-live .wl-eyebrow,#wi-app #wi-live .wl-details,#wi-app #wi-live .wl-note,#wi-app #wi-live #wl-diagnostic-state{color:#60704e}
+#wi-app #wi-live button{border-radius:22px;background:#fffefa;color:#33472d;border-color:#c4d1b5}
+#wi-app #wi-live #wl-start{background:#334b30;color:#fff;border-color:#334b30}
+#wi-app #wi-live .wl-help{border-radius:10px;border-color:#cfdbc0;background:#fffefa}
+#wi-app #wi-live .wl-mic,#wi-app #wi-live .wl-result{background:#e3ebd6;color:#405332}
+#wi-app button:focus-visible,#wi-app select:focus-visible,#wi-app textarea:focus-visible,#wi-app input:focus-visible,#wi-app summary:focus-visible{outline:3px solid #8c682b;outline-offset:4px}
+@media(min-width:1800px){#wi-app .wi-launch h1{max-width:690px}#wi-app .wi-main{padding-left:36px;padding-right:36px}#wi-app .wi-launch{min-height:261px}}
+@media(max-width:1450px){#wi-app .wi-shell{grid-template-columns:195px minmax(0,1fr)}#wi-app .wi-sidebar{padding-left:10px;padding-right:10px}#wi-app .wi-toolbar{padding:13px 22px}#wi-app .wi-tools .wi-demo-tag{display:none}#wi-app .wi-tools{gap:5px}#wi-app .wi-tools .wi-btn{font-size:11px;padding:8px 11px}#wi-app .wi-main{padding:22px}#wi-app .wi-launch{padding:25px;min-height:235px}#wi-app .wi-launch h1{font-size:54px}#wi-app .wi-launch .wi-lead{font-size:13px}#wi-app .wi-number{font-size:33px}#wi-app .wi-overview>.wi-split{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr)}}
+@media(max-width:1100px){#wi-app .wi-shell{grid-template-columns:1fr}#wi-app .wi-sidebar{display:none}#wi-app .wi-toolbar{position:sticky;flex-wrap:nowrap;padding:12px 18px}#wi-app .wi-tools{flex-wrap:wrap;max-width:55%}#wi-app .wi-workflow button{padding:9px 12px}#wi-app .wi-filterbar{padding:12px 22px}#wi-app .wi-orbit-art{width:50%;right:-40px}#wi-app .wi-launch>.wi-tag{font-size:10px}#wi-app .wi-main{scroll-margin-top:110px}}
+@media(max-width:760px){#wi-app .wi-toolbar{position:static;flex-wrap:wrap;justify-content:center;padding:12px}#wi-app .wi-tools{max-width:none;width:100%;justify-content:center}#wi-app .wi-workflow{width:100%;justify-content:center}#wi-app .wi-workflow button{flex:1;justify-content:center}#wi-app .wi-main{padding:16px 13px}#wi-app .wi-filterbar{padding:12px 14px}#wi-app .wi-filter-group{gap:8px}#wi-app .wi-filter{flex:1 1 43%;min-width:0}#wi-app .wi-filter select{max-width:100%;width:100%}#wi-app .wi-launch{min-height:265px;padding:27px 23px;align-items:flex-start}#wi-app .wi-launch>div:first-child{max-width:90%}#wi-app .wi-launch h1{font-size:42px;letter-spacing:-1.8px;max-width:350px}#wi-app .wi-launch .wi-lead{font-size:12px;max-width:300px}#wi-app .wi-launch>.wi-tag{position:relative;left:0;top:0;right:auto;margin-top:10px}#wi-app .wi-orbit-art{opacity:.2;width:90%;right:-95px;top:15px;height:330px}#wi-app .wi-orbit-art>span{display:none}#wi-app .wi-overview>.wi-split{grid-template-columns:1fr;gap:16px}#wi-app .wi-grid4{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#wi-app .wi-kpi{padding:15px 14px}#wi-app .wi-number{font-size:29px}#wi-app .wi-kpi-label,#wi-app .wi-kpi-detail{font-size:11px}#wi-app .wi-panel{padding:18px}#wi-app .wi-hero{padding:21px}#wi-app .wi-orbit-mesh{animation:none}#wi-app .wi-decide h1{font-size:34px}#wi-app .wi-decide-case-nav .wi-btn{font-size:11px;padding:8px 11px}#wi-app #wi-live{margin:16px 13px}#wi-app #wi-live .wl-panel{padding:18px}#wi-app .wi-investigation-save{padding:14px}#wi-app .wi-investigation-save summary span{display:block;margin-left:18px;margin-top:4px}}
+@media(prefers-reduced-motion:reduce){#wi-app *,#wi-app *::before,#wi-app *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{#wi-app .wi-orbit-art{display:none}#wi-app .wi-launch{background:#fff;min-height:0;border:0;padding:0}#wi-app .wi-launch>div:first-child{max-width:100%}#wi-app .wi-sidebar{display:none}#wi-app .wi-shell{grid-template-columns:1fr}#wi-app .wi-toolbar{position:static;background:white}#wi-app .wi-hero{background:white;color:black;border:1px solid #888}#wi-app .wi-hero p,#wi-app .wi-hero .wi-eyebrow{color:#333}}
+
+#wi-app #wi-explore{display:none}
+#wi-app #wi-navigation-dialog{color:#e4e8de;background:#202720;border:1px solid #54624b;border-radius:18px;padding:24px;max-width:440px;width:calc(100% - 32px);max-height:85vh;box-shadow:0 25px 100px #0005}
+#wi-app #wi-navigation-dialog::backdrop{background:#151e1980;backdrop-filter:blur(5px)}
+#wi-app .wi-menu-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px}
+#wi-app .wi-menu-head h2{font-size:20px;color:#e8efde}
+#wi-app .wi-menu-head .wi-btn{color:#e8efde;background:#35422e;border-color:#536048}
+@media(max-width:1100px){#wi-app #wi-explore{display:inline-flex}#wi-app .wi-toolbar{flex-wrap:wrap}#wi-app .wi-tools{max-width:none;margin-left:auto}}
+@media(max-width:760px){#wi-app .wi-workflow{width:auto;flex:1}#wi-app #wi-explore{font-size:11px;padding:9px 11px}#wi-app .wi-workflow button{font-size:11px;padding:9px 8px}#wi-app .wi-workflow button span{display:none}}
+@media print{#wi-app #wi-explore{display:none}}
+#wi-app #wi-navigation-dialog .wi-domains{display:grid;grid-template-columns:1fr;gap:5px}
+#wi-app #wi-navigation-dialog .wi-domains button{width:100%;font-size:14px;min-height:47px}
+#wi-app #wi-navigation-dialog .wi-nav-number{display:grid}

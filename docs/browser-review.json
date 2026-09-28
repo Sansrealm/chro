@@ -1,0 +1,22 @@
+{
+  "at": "2026-09-28T19:15:38.189Z",
+  "browser": "153.0.8010.53",
+  "checks": [
+    "1920×1080 Monitor, Investigate and Decide screenshots; no horizontal overflow",
+    "0.5 pp downside shows −$90,000 above the fold",
+    "Saved investigation reload restores question, notes, scope and pinned lineage",
+    "Saved decision carries evidence and opens with its panel closed",
+    "Source correction marks saved lineage stale; repinning permits a new investigation version",
+    "Executive perspective preserves the selected Monitor view",
+    "All eight briefing steps navigate and finish",
+    "Monitor, Investigate and Decide fit 1366, 768 and 390 px widths",
+    "Mobile Explore menu reaches People analytics; Escape closes and returns focus",
+    "Reduced-motion preference disables decorative orbit animation",
+    "All six scenario visualizations captured in Chrome",
+    "Opening voice does not capture; simulated denied permission shows error and allows retry",
+    "No browser JavaScript errors"
+  ],
+  "screenshots": "docs/screenshots",
+  "externalCalls": false,
+  "physicalMicrophoneTested": false
+}

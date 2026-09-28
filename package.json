@@ -1,0 +1,19 @@
+{
+  "name": "chro-multimodal-starter",
+  "version": "2.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test test/*.mjs",
+    "preflight": "node --env-file-if-exists=.env scripts/preflight.mjs",
+    "test:browser": "node scripts/browser-review.mjs",
+    "preview:review": "node scripts/review-server.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}

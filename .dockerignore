@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.state
+node_modules
+*.log
+*.webm
+.git
+.gitignore
+test
+VALIDATION.md
+.review-state
+.cloud-local
+node_modules
+docs
+scripts
+gha-creds-*.json

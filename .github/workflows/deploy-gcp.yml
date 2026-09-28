@@ -1,0 +1,62 @@
+﻿name: Test and deploy CHRO
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: chro-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Browser review
+        run: |
+          npx playwright-core install chromium --with-deps
+          export CHRO_BROWSER="$(node --input-type=module -e "import {chromium} from 'playwright-core';console.log(chromium.executablePath())")"
+          npm run test:browser
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: project-ed47fc09-912f-41b0-92f
+      REGION: us-central1
+      IMAGE: us-central1-docker.pkg.dev/project-ed47fc09-912f-41b0-92f/chro/app:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/127316151094/locations/global/workloadIdentityPools/chro-github/providers/github
+          service_account: chro-deploy@project-ed47fc09-912f-41b0-92f.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Build and push container
+        run: |
+          docker build --tag "$IMAGE" .
+          docker push "$IMAGE"
+      - name: Deploy
+        run: |
+          gcloud run deploy chro --project="$PROJECT" --region="$REGION" \
+            --image="$IMAGE" --service-account="chro-runtime@$PROJECT.iam.gserviceaccount.com" \
+            --port=8787 --allow-unauthenticated --session-affinity \
+            --min-instances=1 --max-instances=1 --concurrency=20 --timeout=3600 \
+            --cpu=1 --memory=512Mi --no-cpu-throttling \
+            --set-env-vars="STATE_BUCKET=$PROJECT-chro-state,STATE_PREFIX=chro,PUBLIC_ORIGIN=https://chro-127316151094.us-central1.run.app" \
+            --set-secrets="APP_PASSWORD=chro-app-password:latest,OPENAI_API_KEY=chro-openai-api-key:latest" --quiet
+          URL=https://chro-127316151094.us-central1.run.app
+          echo "Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
+          curl --fail --retry 5 "$URL/" | grep -q 'Enter your workspace'
