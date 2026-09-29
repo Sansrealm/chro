@@ -6,7 +6,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { resolve, join } from 'node:path';
-import { answer, demoPlan, modelPlan, routingInstructions, routingSchema, validateRequest, exportDataset, hydrateDataset, effectiveAssumptions, scenario, descriptor, metricIds, scopeOf } from './engine.mjs';
+import { answer, backAnswer, navigation, demoPlan, modelPlan, routingInstructions, routingSchema, validateRequest, exportDataset, hydrateDataset, effectiveAssumptions, scenario, descriptor, metricIds, scopeOf } from './engine.mjs';
 import { createWorkday } from './workday.mjs';
 import { createLiveService } from './live.mjs';
 import { createReviewService } from './review.mjs';
@@ -16,7 +16,7 @@ import { createDiagnostics, assertAPIKey, connectionError, applicationError, api
 
 const VERSION = '2.0.1';
 const FILES = new Map([['/', ['index.html', 'text/html; charset=utf-8']], ['/index.html', ['index.html', 'text/html; charset=utf-8']]]);
-for (const name of ['conversation','live','operations','workspace','investigations','experience']) for (const extension of ['js','css']) FILES.set(`/${name}.${extension}`, [`${name}.${extension}`, extension==='js'?'text/javascript; charset=utf-8':'text/css; charset=utf-8']);
+for (const name of ['conversation','live','operations','workspace','investigations','experience','focus']) for (const extension of ['js','css']) FILES.set(`/${name}.${extension}`, [`${name}.${extension}`, extension==='js'?'text/javascript; charset=utf-8':'text/css; charset=utf-8']);
 const AUDIO = new Map([['audio/webm', 'webm'], ['audio/mp4', 'mp4'], ['audio/wav', 'wav'], ['audio/mpeg', 'mp3']]);
 const fail = (status, message) => Object.assign(new Error(message), { status });
 function json(res, status, value) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(value)); }
@@ -70,11 +70,18 @@ export function createServer({ apiKey = process.env.OPENAI_API_KEY || '', fetchI
     let request; try { request = validateRequest(input); } catch (e) { throw fail(400, e.message); }
     const snapshot = workday.snapshot();
     if (input.sourceVersion && input.sourceVersion !== snapshot.sourceVersion) throw fail(409, 'The source data changed. Refresh the dataset and ask again.');
+    const nav = navigation(request.question);
+    if (nav && !nav.target) {
+      const result = backAnswer(request, mode);
+      await journal.log('question.answered', { mode, action: 'back', metricId: null, caseId: null, sourceVersion: snapshot.sourceVersion });
+      return result;
+    }
+    const routed = nav ? { ...request, question: nav.target } : request;
     let plan;
-    if (mode === 'demo') plan = demoPlan(request);
+    if (mode === 'demo') plan = demoPlan(routed);
     else {
       const payload = { model: 'gpt-6-astra', reasoning: { effort: 'low' }, store: false, instructions: routingInstructions,
-        input: JSON.stringify({ question: request.question, scope: request.scope, context: request.context, history: request.history }),
+        input: JSON.stringify({ question: routed.question, scope: request.scope, context: request.context, history: request.history }),
         text: { format: { type: 'json_schema', name: 'chro_route', strict: true, schema: routingSchema } }, max_output_tokens: 2500 };
       const bytes = await upstream('responses', JSON.stringify(payload), 'application/json', signal);
       try {
@@ -89,6 +96,7 @@ export function createServer({ apiKey = process.env.OPENAI_API_KEY || '', fetchI
     if (workday.snapshot().sourceVersion !== snapshot.sourceVersion) throw fail(409, 'Source data changed during analysis. Ask again using the refreshed data.');
     hydrateDataset(snapshot);
     const result = answer(request, plan, mode);
+    if (nav) result.navigation = { type: 'back', target: nav.target, intent: plan.intent };
     await journal.log('question.answered', { mode, action: result.action.type, metricId: result.action.metricId, caseId: result.action.caseId, sourceVersion: snapshot.sourceVersion });
     return result;
   }
