@@ -303,7 +303,10 @@
   stageEl.replaceChildren(stageHead(['Insight', ins.id === 'costVariance' ? 'Workforce cost vs plan' : 'Onboarding and early exits', ins.periodLabel].filter(Boolean).join(' · '), answer.title, ins.where));
   stageEl.append(el('p', 'fx-insight-lead', answer.answer));
   if (ins.id === 'costVariance') {
-   stageEl.append(barList(ins.rows.map(r => ({ label: r.label, value: r.variance, valueText: r.share === null ? r.formatted : `${r.formatted} · ${Math.round(r.share * 100)}% of overspend`, sub: `${r.pctFormatted} over its plan`, tag: r.aboveThreshold ? 'Above 2%' : '', tip: `${r.label}: ${r.formatted} over plan (${r.pctFormatted} of its plan)` })), 'Overspend by ' + ins.dimension));
+   if (ins.rows.some(r => r.aboveThreshold)) { const key = el('p', 'fx-insight-key'); key.append(el('span', 'fx-tag', 'x.x% over plan'), ` = above the ${Math.round(ins.threshold * 100)}% review threshold`); stageEl.append(key); }
+   // Near the threshold, one decimal can hide which side a reading falls on (2.04% shows as 2.0%).
+   const near = r => Math.abs(r.pctOverPlan - ins.threshold) < 0.0005 ? (r.pctOverPlan * 100).toFixed(2) + '%' : r.pctFormatted;
+   stageEl.append(barList(ins.rows.map(r => ({ label: r.label, value: r.variance, valueText: r.share === null ? r.formatted : `${r.formatted} · ${Math.round(r.share * 100)}% of overspend`, sub: r.aboveThreshold ? '' : `${near(r)} over its plan`, tag: r.aboveThreshold ? `${near(r)} over plan` : '', tip: `${r.label}: ${r.formatted} over plan (${near(r)} of its plan${r.aboveThreshold ? ', above the 2% review threshold' : ''})` })), 'Overspend by ' + ins.dimension));
   } else if (!ins.suppressed) {
    const pct = v => (v * 100).toFixed(1) + '%', chain = el('div', 'fx-chain');
    [[pct(ins.delayedShare), `of ${ins.hires.toLocaleString('en-US')} hires started with delayed onboarding (${ins.delayed.toLocaleString('en-US')})`],
