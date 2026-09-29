@@ -96,6 +96,12 @@
  display.addEventListener('click', () => root.dataset.fxSheet === 'open' ? setSheet(false) : openSheet({ focusInput: !hasAnswer() }));
  expand.addEventListener('click', () => root.dataset.fxSheet === 'open' ? setSheet(false) : openSheet());
  end.addEventListener('click', () => q('#wl-stop')?.click());
+ // The question box looks like a single line, so Enter sends and Shift+Enter adds a line.
+ q('#vc-question')?.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing || e.altKey || e.ctrlKey || e.metaKey) return;
+  e.preventDefault();
+  if (e.target.value.trim()) q('#vc-form')?.requestSubmit();
+ });
  // Going to the data closes the sheet so the dashboard is unobstructed.
  sheet.addEventListener('click', e => { if (e.target.closest('#vc-actions .vc-primary')) setSheet(false); });
 
