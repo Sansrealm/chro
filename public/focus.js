@@ -227,7 +227,7 @@
   const s = app.state, v = e.view;
   Object.assign(s, { page: v.page, domain: v.domain, people: v.people, operations: v.operations, metric: v.metric, trustTab: v.trustTab, function: v.function, region: v.region, period: v.period, audience: v.audience, presenting: false });
   if (v.decide) Object.assign(s.decide, copy(v.decide));
-  app.render(); setSheet(false); scrollTo({ top: 0, behavior: 'smooth' });
+  enter(); app.render(); setSheet(false); scrollTo({ top: 0, behavior: 'smooth' }); if (announce && e.answer) land(e.answer);
   if (announce) flash('Back to ' + e.label, 'info'); else schedule();
   return true;
  }
@@ -255,7 +255,7 @@
  }
  // Breakdown stage: a ranked chart for "by region", "compare", "top N" and trends. It is kept as the first
  // child of the main view so it scrolls with the page it belongs to; the page re-renders beneath it.
- let stage = null;
+ let stage = null, stageAnimTimer = 0;
  const stageEl = document.createElement('section');
  stageEl.id = 'fx-stage'; stageEl.className = 'fx-stage'; stageEl.setAttribute('aria-labelledby', 'fx-stage-title');
  const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -294,7 +294,7 @@
    const pts = rows.map((r, i) => r.value === null ? null : `${x(i)},${100 - y(r.value)}`).filter(Boolean).join(' ');
    plot.insertAdjacentHTML('beforeend', `<svg class="fx-line-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="0" x2="100" y2="0" class="fx-line-grid"/><line x1="0" y1="100" x2="100" y2="100" class="fx-line-grid"/><polyline points="${pts}" class="fx-line-path"/></svg>`);
    rows.forEach((r, i) => {
-    const hit = el('div', 'fx-line-hit'); hit.style.left = (i / n * 100) + '%'; hit.style.width = (100 / n) + '%'; hit.dataset.tip = tip(r); hit.tabIndex = 0; hit.setAttribute('aria-label', tip(r));
+    const hit = el('div', 'fx-line-hit'); hit.style.setProperty('--d', Math.round(i / Math.max(n - 1, 1) * 700) + 'ms'); hit.style.left = (i / n * 100) + '%'; hit.style.width = (100 / n) + '%'; hit.dataset.tip = tip(r); hit.tabIndex = 0; hit.setAttribute('aria-label', tip(r));
     if (r.value !== null) { const dot = el('span', 'fx-line-dot'); dot.style.bottom = `calc(30px + (100% - 50px) * ${y(r.value) / 100})`; hit.append(dot);
      if (r === shown[0] || r === shown.at(-1) || r === peak) { const v = el('span', 'fx-line-val', r.formatted); v.style.bottom = `calc(40px + (100% - 50px) * ${y(r.value) / 100})`; hit.append(v); } }
     hit.append(el('span', 'fx-line-label', r.label.replace(/ 20(\d\d)$/, i === 0 || r.segment.endsWith('-01') ? " ’$1" : '')));
@@ -304,9 +304,9 @@
   } else {
    const list = el('ol', 'fx-bars'); list.setAttribute('aria-label', answer.title);
    rows.forEach(r => {
-    const li = el('li', 'fx-bar-row'); li.dataset.tip = tip(r); li.tabIndex = 0; li.setAttribute('aria-label', tip(r));
+    const li = el('li', 'fx-bar-row'); li.style.setProperty('--i', rows.indexOf(r)); li.dataset.tip = tip(r); li.tabIndex = 0; li.setAttribute('aria-label', tip(r));
     const track = el('div', 'fx-bar-track');
-    if (r.value !== null) { const bar = el('span', 'fx-bar'); const a = pos(Math.min(0, r.value)), z = pos(Math.max(0, r.value)); bar.style.left = a + '%'; bar.style.width = Math.max(z - a, 0.6) + '%'; track.append(bar);
+    if (r.value !== null) { const bar = el('span', 'fx-bar'); const a = pos(Math.min(0, r.value)), z = pos(Math.max(0, r.value)); bar.style.left = a + '%'; bar.style.width = Math.max(z - a, 0.6) + '%'; bar.style.transformOrigin = r.value < 0 ? 'right' : 'left'; track.append(bar);
      const v = el('span', 'fx-bar-val', r.formatted); v.style.left = `calc(${z}% + 8px)`; track.append(v); }
     else track.append(el('span', 'fx-bar-none', 'Suppressed'));
     if (ref !== null) { const line = el('span', 'fx-bar-ref'); line.style.left = pos(ref) + '%'; track.append(line); }
@@ -322,8 +322,29 @@
   t.append(thead); rows.forEach(r => { const tr = el('tr'); tr.append(el('td', null, r.label), el('td', null, r.formatted), el('td', null, r.numerator != null && r.denominator != null ? `${nf.format(r.numerator)} / ${nf.format(r.denominator)}` : r.period)); t.append(tr); });
   table.append(sum, t);
   stageEl.append(foot, el('p', 'fx-stage-def', b.definition), table);
+  // Build-in plays once; the class is dropped so re-attaching after a page re-render does not replay it.
+  stageEl.classList.add('fx-animate'); clearTimeout(stageAnimTimer); stageAnimTimer = setTimeout(() => stageEl.classList.remove('fx-animate'), 1400);
   keepStage();
  }
+ // Motion: charts build in and the answering element glows once, only on real view changes.
+ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+ let enterTimer = 0;
+ function enter() {
+  if (!main || reduced.matches) return;
+  main.classList.remove('fx-enter'); void main.offsetWidth; main.classList.add('fx-enter');
+  clearTimeout(enterTimer); enterTimer = setTimeout(() => main.classList.remove('fx-enter'), 1200);
+ }
+ function land(answer) {
+  const type = answer?.action?.type; if (!main || !type) return;
+  requestAnimationFrame(() => {
+   const target = type === 'breakdown' ? stageEl : type === 'metric' ? main.querySelector('.wi-split .wi-panel') : type === 'scenario' ? main.querySelector('.wi-decide-case-body > .wi-grid3') || main.querySelector('.wi-lab-viz') : type === 'overview' ? main.querySelector('.wi-grid4') : null;
+   if (!target || !target.isConnected) return;
+   target.classList.remove('fx-landed'); void target.offsetWidth; target.classList.add('fx-landed');
+  });
+ }
+ // Navigation the user taps: mark the view change before the app re-renders it.
+ root.addEventListener('click', e => { const b = e.target.closest?.('[data-go],[data-page],[data-inspect],[data-cell],[data-lab],[data-decide-case],[data-pillar],[data-audience]'); if (b && root.contains(b) && !b.disabled) enter(); }, true);
+ root.addEventListener('change', e => { if (e.target.closest?.('#wi-filters')) enter(); }, true);
  // Session layer: a toggled timeline of the steps in this tab. Not saved anywhere.
  const session = document.createElement('aside');
  session.id = 'fx-session'; session.className = 'fx-session'; session.hidden = true; session.setAttribute('role', 'dialog'); session.setAttribute('aria-labelledby', 'fx-session-title');
@@ -384,9 +405,9 @@
   pendingVoice = Date.now() - lastVoiceAt < 90000;
   // Clarifications have no facts and stay in the sheet rather than moving the dashboard.
   if (data?.breakdown && data.action?.type === 'breakdown' && app?.openMetric) {
-   pendingAnswer = data; looseAnswer = null; setSheet(false); showStage(data);
-   app.openMetric(data.action.metricId); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120);
-  } else if (primary && data?.facts?.length) { pendingAnswer = data; looseAnswer = null; primary.click(); setSheet(false); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120); }
+   pendingAnswer = data; looseAnswer = null; setSheet(false); enter(); showStage(data);
+   app.openMetric(data.action.metricId); land(data); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120);
+  } else if (primary && data?.facts?.length) { pendingAnswer = data; looseAnswer = null; enter(); primary.click(); land(data); setSheet(false); clearTimeout(recordTimer); recordTimer = setTimeout(record, 120); }
   else { pendingAnswer = null; looseAnswer = data; setSheet(true); if (data?.question) { log.push({ ask: { question: data.question, title: data.title, voice: pendingVoice, at: Date.now() } }); if (log.length > 120) log.shift(); } }
   schedule();
  }).observe(q('#vc-result') || sheet, { attributes: true, childList: true, subtree: true, characterData: true });
