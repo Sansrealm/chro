@@ -292,7 +292,7 @@
    const name = el('span', 'fx-bar-label'); name.append(el('span', 'fx-bar-name', r.label));
    if (r.sub || r.tag) { const sub = el('span', 'fx-bar-sub', r.sub || ''); if (r.tag) sub.append(el('span', 'fx-tag', r.tag)); name.append(sub); }
    const track = el('div', 'fx-bar-track');
-   if (r.value !== null) { const bar = el('span', 'fx-bar'), a = pos(Math.min(0, r.value)), z = pos(Math.max(0, r.value)); bar.style.left = a + '%'; bar.style.width = Math.max(z - a, 0.6) + '%'; bar.style.transformOrigin = r.value < 0 ? 'right' : 'left'; track.append(bar); const v = el('span', 'fx-bar-val', r.valueText); v.style.left = `calc(${z}% + 8px)`; track.append(v); }
+   if (r.value !== null) { const bar = el('span', 'fx-bar'), a = pos(Math.min(0, r.value)), z = pos(Math.max(0, r.value)); bar.style.left = a + '%'; bar.style.width = Math.max(z - a, 0.6) + '%'; bar.style.transformOrigin = r.value < 0 ? 'right' : 'left'; track.append(bar); const v = el('span', 'fx-bar-val', r.valueText); if (r.valueDetail) v.append(el('span', 'fx-bar-detail', r.valueDetail)); v.style.left = `calc(${z}% + 8px)`; track.append(v); }
    else track.append(el('span', 'fx-bar-none', r.valueText || 'Suppressed'));
    li.append(name, track); list.append(li);
   });
@@ -301,24 +301,27 @@
  function renderInsight(answer) {
   const ins = answer.insight, a = answer.action || {};
   stageEl.replaceChildren(stageHead(['Insight', ins.id === 'costVariance' ? 'Workforce cost vs plan' : 'Onboarding and early exits', ins.periodLabel].filter(Boolean).join(' · '), answer.title, ins.where));
-  stageEl.append(el('p', 'fx-insight-lead', answer.answer));
+  stageEl.append(el('p', 'fx-insight-lead', ins.headline || answer.answer));
+  // Labelled number tiles: label above, value, one-line caption. The onboarding chain reads left to right.
+  if (ins.tiles?.length) {
+   const tiles = el('div', ins.chain ? 'fx-chain' : 'fx-tiles');
+   ins.tiles.forEach((t, i) => {
+    if (ins.chain && i) tiles.append(Object.assign(el('span', 'fx-chain-arrow', '→'), { ariaHidden: 'true' }));
+    const tile = el('div', 'fx-chain-step'); tile.style.setProperty('--i', i);
+    tile.append(el('span', 'fx-tile-label', t.label), el('strong', null, t.value), el('span', 'fx-tile-caption', t.caption)); tiles.append(tile);
+   });
+   stageEl.append(tiles);
+  }
   if (ins.id === 'costVariance') {
+   stageEl.append(el('h3', 'fx-insight-h', ins.chartTitle || 'Overspend'));
    if (ins.rows.some(r => r.aboveThreshold)) { const key = el('p', 'fx-insight-key'); key.append(el('span', 'fx-tag', 'x.x% over plan'), ` = above the ${Math.round(ins.threshold * 100)}% review threshold`); stageEl.append(key); }
    // Near the threshold, one decimal can hide which side a reading falls on (2.04% shows as 2.0%).
    const near = r => Math.abs(r.pctOverPlan - ins.threshold) < 0.0005 ? (r.pctOverPlan * 100).toFixed(2) + '%' : r.pctFormatted;
-   stageEl.append(barList(ins.rows.map(r => ({ label: r.label, value: r.variance, valueText: r.share === null ? r.formatted : `${r.formatted} · ${Math.round(r.share * 100)}% of overspend`, sub: r.aboveThreshold ? '' : `${near(r)} over its plan`, tag: r.aboveThreshold ? `${near(r)} over plan` : '', tip: `${r.label}: ${r.formatted} over plan (${near(r)} of its plan${r.aboveThreshold ? ', above the 2% review threshold' : ''})` })), 'Overspend by ' + ins.dimension));
+   stageEl.append(barList(ins.rows.map(r => ({ label: r.label, value: r.variance, valueText: r.formatted, valueDetail: r.share === null ? '' : `${Math.round(r.share * 100)}% of overspend`, sub: r.aboveThreshold ? '' : `${near(r)} over its plan`, tag: r.aboveThreshold ? `${near(r)} over plan` : '', tip: `${r.label}: ${r.formatted} over plan (${near(r)} of its plan${r.aboveThreshold ? ', above the 2% review threshold' : ''})` })), 'Overspend by ' + ins.dimension));
   } else if (!ins.suppressed) {
-   const pct = v => (v * 100).toFixed(1) + '%', chain = el('div', 'fx-chain');
-   [[pct(ins.delayedShare), `of ${ins.hires.toLocaleString('en-US')} hires started with delayed onboarding (${ins.delayed.toLocaleString('en-US')})`],
-    [`${pct(ins.delayedExitRate)} vs ${pct(ins.onTimeExitRate)}`, 'left in their first year: late starts vs on-time starts'],
-    [`≈${Math.round(ins.extraExits)} extra exits`, `≈${fmtMoney(ins.value)} at ${fmtMoney(ins.replacementCost)} per exit (lab assumption)`]].forEach(([big, text], i) => {
-    if (i) chain.append(Object.assign(el('span', 'fx-chain-arrow'), { ariaHidden: 'true', textContent: '→' }));
-    const tile = el('div', 'fx-chain-step'); tile.style.setProperty('--i', i); tile.append(el('strong', null, big), el('span', null, text)); chain.append(tile);
-   });
-   stageEl.append(chain);
    const grid = el('div', 'fx-insight-grid');
-   if (ins.byFunction?.length) { const box = el('div', 'fx-insight-box'); box.append(el('h3', null, 'Where the extra exits are'), barList(ins.byFunction.map(r => ({ label: r.label, value: r.extra === null ? null : Math.round(r.extra * 10) / 10, valueText: r.extra === null ? 'Below display threshold' : `≈${Math.round(r.extra)}`, sub: `${Math.round(r.delayedShare * 100)}% started late`, tip: r.extra === null ? `${r.label}: groups below the privacy threshold` : `${r.label}: about ${Math.round(r.extra)} extra first-year exits; ${Math.round(r.delayedShare * 100)}% of ${r.hires} hires started late` })), 'Extra exits by function')); grid.append(box); }
-   if (ins.steps?.length) { const box = el('div', 'fx-insight-box'); box.append(el('h3', null, `Onboarding step time · current cases (${ins.stepsPeriod})`), barList(ins.steps.map(r => ({ label: r.label, value: r.days, valueText: `${r.days.toFixed(1)} d`, sub: `${r.cases.toLocaleString('en-US')} cases`, tip: `${r.label}: ${r.days.toFixed(1)} days on average across ${r.cases} closed cases` })), 'Average days per onboarding step')); grid.append(box); }
+   if (ins.byFunction?.length) { const box = el('div', 'fx-insight-box'); box.append(el('h3', 'fx-insight-h', 'Extra exits by function'), el('p', 'fx-insight-sub', 'Estimated from each function’s late vs on-time exit rates'), barList(ins.byFunction.map(r => ({ label: r.label, value: r.extra === null ? null : Math.round(r.extra * 10) / 10, valueText: r.extra === null ? 'Below display threshold' : `≈${Math.round(r.extra)}`, sub: `${Math.round(r.delayedShare * 100)}% started late`, tip: r.extra === null ? `${r.label}: groups below the privacy threshold` : `${r.label}: about ${Math.round(r.extra)} extra first-year exits; ${Math.round(r.delayedShare * 100)}% of ${r.hires} hires started late` })), 'Extra exits by function')); grid.append(box); }
+   if (ins.steps?.length) { const box = el('div', 'fx-insight-box'); box.append(el('h3', 'fx-insight-h', 'Average days per onboarding step'), el('p', 'fx-insight-sub', `Current onboarding cases · ${ins.stepsPeriod}`), barList(ins.steps.map(r => ({ label: r.label, value: r.days, valueText: `${r.days.toFixed(1)} d`, sub: `${r.cases.toLocaleString('en-US')} cases`, tip: `${r.label}: ${r.days.toFixed(1)} days on average across ${r.cases} closed cases` })), 'Average days per onboarding step')); grid.append(box); }
    stageEl.append(grid);
   }
   const foot = el('div', 'fx-stage-foot');

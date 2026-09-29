@@ -341,6 +341,15 @@ function costVarianceInsight(out, scope) {
   if (total > 0) {
     out.answer = `The workforce run rate is ${U.money(total)} (${U.fmt(totalPct, 'ratio')}) over plan${where ? ` in ${where}` : ''}. ${top.label} contributes the most at ${top.formatted} (${U.fmt(top.share, 'ratio')} of the overspend)` + (relative.segment !== top.segment ? `; ${relative.label} is furthest over its own plan at ${relative.pctFormatted}.` : ', and is also furthest over its own plan.') + ` ${above.length} of ${rows.length} ${dim === 'function' ? 'functions' : 'regions'} ${above.length === 1 ? 'is' : 'are'} above the 2% review threshold.`;
   } else out.answer = `The workforce run rate is ${U.money(Math.abs(total))} ${total < 0 ? 'under' : 'on'} plan${where ? ` in ${where}` : ''}. No ${dim} is driving an overspend.`;
+  const plural = dim === 'function' ? 'functions' : 'regions';
+  out.insight.headline = total > 0 ? (relative.segment !== top.segment ? `${top.label} is the biggest share of the ${U.money(total)} overspend; ${relative.label} is furthest over its own plan.` : `${top.label} is the biggest share of the ${U.money(total)} overspend and furthest over its own plan.`) : `Workforce cost is within plan${where ? ` in ${where}` : ''}.`;
+  out.insight.tiles = total > 0 ? [
+    { label: 'Over plan', value: U.money(total), caption: `${U.fmt(totalPct, 'ratio')} above annual plan` },
+    { label: 'Biggest contributor', value: top.label, caption: `${top.formatted} · ${Math.round(top.share * 100)}% of overspend` },
+    { label: 'Furthest over its plan', value: relative.label, caption: `${relative.pctFormatted} over plan` },
+    { label: 'Above 2% threshold', value: `${above.length} of ${rows.length}`, caption: plural }
+  ] : [{ label: 'Against plan', value: U.money(total), caption: `${U.fmt(totalPct, 'ratio')} of annual plan` }];
+  out.insight.chartTitle = `Overspend by ${dim}`;
   out.facts = [fact('Over plan', `${U.money(total)} · ${U.fmt(totalPct, 'ratio')}`, 'Annual run rate minus comparable annual plan'), fact('Largest contributor', `${top.label} · ${top.formatted}`, total > 0 ? `${U.fmt(top.share, 'ratio')} of the overspend` : 'Largest variance'), fact('Furthest over own plan', `${relative.label} · ${relative.pctFormatted}`, 'Variance / that segment’s plan'), fact('Above 2% threshold', `${above.length} of ${rows.length}`, 'Existing cost signal threshold')];
   out.evidence = [evidence(descriptor('E05', scope))];
   out.boundary += ' Contributions are run-rate differences by segment, not booked savings or causes.';
@@ -370,6 +379,13 @@ function onboardingInsight(out, scope) {
   out.answer = gap > 0
     ? `Delayed onboarding is linked to about ${U.n(extra, 0)} extra first-year exits${where ? ` in ${where}` : ''}. ${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} hires (${U.fmt(share(c.delayed, c.hires), 'ratio')}) started late and left in their first year at ${U.fmt(c.delayedExitRate, 'ratio')}, against ${U.fmt(c.onTimeExitRate, 'ratio')} for on-time starts. At the retention lab’s ${U.money(cost)} replacement-cost assumption that is about ${U.money(value)}.` + (lead && lead.extra > 0 && byFunction.length ? ` ${lead.label} accounts for about ${U.n(lead.extra, 0)} of them.` : '') + (steps[0] ? ` ${steps[0].label} is currently the slowest onboarding step at ${U.n(steps[0].days, 1)} days on average.` : '') + ' This is an association in one cohort, not proof of cause.'
     : `Delayed and on-time starts${where ? ` in ${where}` : ''} leave in their first year at similar rates (${U.fmt(c.delayedExitRate, 'ratio')} and ${U.fmt(c.onTimeExitRate, 'ratio')}), so this cohort shows no onboarding-linked excess.`;
+  out.insight.headline = gap > 0 ? `Late onboarding is linked to about ${U.n(extra, 0)} extra first-year exits (≈${U.money(value)}).` : 'Late and on-time starts leave at similar rates in this cohort.';
+  out.insight.tiles = [
+    { label: 'Started late', value: U.fmt(share(c.delayed, c.hires), 'ratio'), caption: `${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} hires` },
+    { label: 'Left in year one', value: `${U.fmt(c.delayedExitRate, 'ratio')} vs ${U.fmt(c.onTimeExitRate, 'ratio')}`, caption: 'late vs on-time starts' },
+    { label: 'Extra exits', value: `≈${U.n(extra, 0)}`, caption: `≈${U.money(value)} at ${U.money(cost)} each (assumption)` }
+  ];
+  out.insight.chain = true;
   out.facts = [fact('Started late', `${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} · ${U.fmt(share(c.delayed, c.hires), 'ratio')}`, s.period.cohortWindow), fact('First-year exit rate', `${U.fmt(c.delayedExitRate, 'ratio')} late vs ${U.fmt(c.onTimeExitRate, 'ratio')} on time`, 'Matured cohort'), fact('Extra exits', `≈${U.n(extra, 0)}`, 'Delayed starts × rate gap'), fact('Value at stake', `≈${U.money(value)}`, `At ${U.money(cost)} per exit (lab assumption)`)];
   if (steps[0]) out.facts.push(fact('Slowest onboarding step', `${steps[0].label} · ${U.n(steps[0].days, 1)} d`, 'Current onboarding cases'));
 }
