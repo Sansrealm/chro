@@ -379,14 +379,14 @@ function onboardingInsight(out, scope) {
   out.answer = gap > 0
     ? `Delayed onboarding is linked to about ${U.n(extra, 0)} extra first-year exits${where ? ` in ${where}` : ''}. ${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} hires (${U.fmt(share(c.delayed, c.hires), 'ratio')}) started late and left in their first year at ${U.fmt(c.delayedExitRate, 'ratio')}, against ${U.fmt(c.onTimeExitRate, 'ratio')} for on-time starts. At the retention lab’s ${U.money(cost)} replacement-cost assumption that is about ${U.money(value)}.` + (lead && lead.extra > 0 && byFunction.length ? ` ${lead.label} accounts for about ${U.n(lead.extra, 0)} of them.` : '') + (steps[0] ? ` ${steps[0].label} is currently the slowest onboarding step at ${U.n(steps[0].days, 1)} days on average.` : '') + ' This is an association in one cohort, not proof of cause.'
     : `Delayed and on-time starts${where ? ` in ${where}` : ''} leave in their first year at similar rates (${U.fmt(c.delayedExitRate, 'ratio')} and ${U.fmt(c.onTimeExitRate, 'ratio')}), so this cohort shows no onboarding-linked excess.`;
-  out.insight.headline = gap > 0 ? `Late onboarding is linked to about ${U.n(extra, 0)} extra first-year exits (≈${U.money(value)}).` : 'Late and on-time starts leave at similar rates in this cohort.';
+  out.insight.headline = gap > 0 ? `Late onboarding is linked to an estimated ${U.n(extra, 0)} extra first-year exits, worth ${U.money(value)}.` : 'Late and on-time starts leave at similar rates in this cohort.';
   out.insight.tiles = [
     { label: 'Started late', value: U.fmt(share(c.delayed, c.hires), 'ratio'), caption: `${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} hires` },
     { label: 'Left in year one', value: `${U.fmt(c.delayedExitRate, 'ratio')} vs ${U.fmt(c.onTimeExitRate, 'ratio')}`, caption: 'late vs on-time starts' },
-    { label: 'Extra exits', value: `≈${U.n(extra, 0)}`, caption: `≈${U.money(value)} at ${U.money(cost)} each (assumption)` }
+    { label: 'Estimated extra exits', value: U.n(extra, 0), caption: `${U.money(value)} at ${U.money(cost)} per exit (assumed)` }
   ];
   out.insight.chain = true;
-  out.facts = [fact('Started late', `${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} · ${U.fmt(share(c.delayed, c.hires), 'ratio')}`, s.period.cohortWindow), fact('First-year exit rate', `${U.fmt(c.delayedExitRate, 'ratio')} late vs ${U.fmt(c.onTimeExitRate, 'ratio')} on time`, 'Matured cohort'), fact('Extra exits', `≈${U.n(extra, 0)}`, 'Delayed starts × rate gap'), fact('Value at stake', `≈${U.money(value)}`, `At ${U.money(cost)} per exit (lab assumption)`)];
+  out.facts = [fact('Started late', `${U.n(c.delayed, 0)} of ${U.n(c.hires, 0)} · ${U.fmt(share(c.delayed, c.hires), 'ratio')}`, s.period.cohortWindow), fact('First-year exit rate', `${U.fmt(c.delayedExitRate, 'ratio')} late vs ${U.fmt(c.onTimeExitRate, 'ratio')} on time`, 'Matured cohort'), fact('Estimated extra exits', U.n(extra, 0), 'Delayed starts × rate gap'), fact('Estimated value at stake', U.money(value), `At ${U.money(cost)} per exit (lab assumption)`)];
   if (steps[0]) out.facts.push(fact('Slowest onboarding step', `${steps[0].label} · ${U.n(steps[0].days, 1)} d`, 'Current onboarding cases'));
 }
 export function answer(request, rawPlan, mode = 'demo') {
