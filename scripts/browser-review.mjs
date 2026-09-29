@@ -31,7 +31,7 @@ try{
  assert.equal(await page.locator('.wi-decide-case-body>.wi-grid3').evaluate(el=>el.getBoundingClientRect().bottom<innerHeight),true);
  await page.screenshot({path:`${out}/after-downside.png`});record('0.5 pp downside shows −$90,000 above the fold');
  await page.locator('[data-page="investigate"]').click();
- await page.locator('#wi-function').selectOption('Engineering');await page.locator('#wi-region').selectOption('EMEA');
+ await page.locator('#fx-scope').click();await page.locator('#wi-function').selectOption('Engineering');await page.locator('#wi-region').selectOption('EMEA');await page.keyboard.press('Escape');
  await page.locator('[data-pin="C01"]').click();await page.locator('#wi-investigation-save summary').click();
  await page.locator('#wi-investigation-question').fill('Does onboarding timing warrant a pilot?');await page.locator('#wi-investigation-notes').fill('Compare role mix before inferring causality.');
  await page.locator('[data-investigation="save"]').click();await page.waitForFunction(()=>document.querySelector('#wi-investigation-save [role="status"]').textContent.startsWith('Investigation saved'));
@@ -41,7 +41,7 @@ try{
  assert.equal(await page.locator('#wi-function').inputValue(),'Engineering');assert.equal(await page.locator('#wi-investigation-notes').inputValue(),'Compare role mix before inferring causality.');
  await page.screenshot({path:`${out}/after-saved-investigation.png`});record('Saved investigation reload restores question, notes, scope and pinned lineage');
  await page.locator('[data-lab="retention"]').first().click();
- await page.getByRole('button',{name:'Saved decisions',exact:true}).click();await page.locator('[data-ww="save"]').click();await page.waitForFunction(()=>document.querySelector('#ww-status').textContent.includes('Draft saved'));
+ await page.locator('#fx-more').click();await page.getByRole('button',{name:'Saved decisions',exact:true}).click();await page.locator('[data-ww="save"]').click();await page.waitForFunction(()=>document.querySelector('#ww-status').textContent.includes('Draft saved'));
  await page.locator('[data-ww="load"]').click();assert.equal(await page.locator('#ww-panel').isVisible(),false);record('Saved decision carries evidence and opens with its panel closed');
  await page.request.post(base+'/api/workday/sync',{data:{batch:'correction'}});
  await page.reload();await page.locator('[data-page="investigate"]').click();await page.locator('#wi-investigation-save summary').click();await page.locator('#wi-investigation-list').selectOption(saved.id);await page.locator('[data-investigation="load"]').click();
@@ -49,7 +49,7 @@ try{
  await page.locator('[data-investigation="save"]').click();await page.waitForFunction(()=>document.querySelector('#wi-investigation-save [role="status"]').textContent.includes('stale'));
  await page.locator('[data-pin="C01"]').click();await page.locator('[data-investigation="save"]').click();await page.waitForFunction(()=>document.querySelector('#wi-investigation-save [role="status"]').textContent.startsWith('Investigation saved'));
  record('Source correction marks saved lineage stale; repinning permits a new investigation version');
- await page.locator('#wi-domains [data-go="people"]').click();await page.locator('[data-audience="chro"]').click();assert.equal(await page.evaluate(()=>document.querySelector('#wi-app').__WI_APP.state.domain),'people');record('Executive perspective preserves the selected Monitor view');
+ await page.locator('#wi-domains [data-go="people"]').click();await page.locator('#fx-scope').click();await page.locator('[data-audience="chro"]').click();await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>document.querySelector('#wi-app').__WI_APP.state.domain),'people');record('Executive perspective preserves the selected Monitor view');
  await page.locator('#wi-present').click();for(let i=0;i<7;i++){await page.locator('[data-tour="next"]').click();}assert.match(await page.locator('#wi-tour').innerText(),/8 \/ 8/);await page.locator('[data-tour="next"]').click();record('All eight briefing steps navigate and finish');
  for(const width of [1366,768,390]){
   console.log('Checking width',width);
@@ -74,7 +74,7 @@ try{
  // Browser-only simulated availability and denied capture: no external service or hardware capture.
  await page.route('**/api/status',async route=>{const r=await route.fetch();const data=await r.json();data.live.available=true;await route.fulfill({json:data});});
  await page.addInitScript(()=>{window.__captureCalls=0;Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async()=>{window.__captureCalls++;throw new DOMException('Denied for browser verification','NotAllowedError');}});});
- await page.reload();await page.locator('#wl-toggle').click();assert.equal(await page.evaluate(()=>window.__captureCalls),0);
+ await page.reload();await page.locator('#fx-more').click();await page.getByRole('button',{name:'Voice connection help',exact:true}).click();assert.equal(await page.evaluate(()=>window.__captureCalls),0);
  await page.locator('#wl-start').click();await page.waitForFunction(()=>document.querySelector('#wl-state').textContent.includes('denied'));
  assert.equal(await page.locator('#wl-start').isEnabled(),true);assert.match(await page.locator('#wl-mic').innerText(),/off/i);
  await page.screenshot({path:`${out}/after-voice-permission-error.png`});record('Opening voice does not capture; simulated denied permission shows error and allows retry');
