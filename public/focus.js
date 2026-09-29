@@ -325,7 +325,8 @@
    stageEl.append(grid);
   }
   const foot = el('div', 'fx-stage-foot');
-  if (a.caseId && app?.openLab) { const go = el('button', 'fx-insight-go', `Test a response in the ${a.caseId} lab →`); go.type = 'button'; go.addEventListener('click', () => { enter(); app.openLab(a.caseId, a.metricId); }); foot.append(go); }
+  // Only the onboarding insight has a lab that models a response (retention); the cost insight has none.
+  if (ins.id === 'onboardingExits' && !ins.suppressed && a.caseId && app?.openLab) { const go = el('button', 'fx-insight-go', 'Model an onboarding fix →'); go.type = 'button'; go.addEventListener('click', () => { enter(); app.openLab(a.caseId, a.metricId); }); foot.append(go); }
   foot.append(el('span', null, 'Computed from synthetic governed data · no causal claim'));
   stageEl.append(foot, el('p', 'fx-stage-def', ins.definition || ''));
  }

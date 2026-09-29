@@ -336,7 +336,7 @@ function costVarianceInsight(out, scope) {
   }).sort((a, b) => b.variance - a.variance);
   const top = rows[0], relative = [...rows].sort((a, b) => b.pctOverPlan - a.pctOverPlan)[0], above = rows.filter(r => r.aboveThreshold), totalPct = share(total, w.annualBudgetRunRate);
   out.title = total > 0 ? `Why workforce cost is over plan${where ? ` in ${where}` : ''}` : `Workforce cost against plan${where ? ` in ${where}` : ''}`;
-  out.action = { type: 'insight', metricId: 'E05', caseId: 'capacity', overrides: {} };
+  out.action = { type: 'insight', metricId: 'E05', caseId: null, overrides: {} };
   out.insight = { id: 'costVariance', dimension: dim, where, periodLabel: s.period.stockAsOf, threshold, total: { variance: total, formatted: U.money(total), pctOverPlan: totalPct, pctFormatted: U.fmt(totalPct, 'ratio') }, rows, definition: 'Annual loaded workforce run rate minus comparable annual plan, by segment. Not booked savings; the 2% review threshold is the existing cost signal.' };
   if (total > 0) {
     out.answer = `The workforce run rate is ${U.money(total)} (${U.fmt(totalPct, 'ratio')}) over plan${where ? ` in ${where}` : ''}. ${top.label} contributes the most at ${top.formatted} (${U.fmt(top.share, 'ratio')} of the overspend)` + (relative.segment !== top.segment ? `; ${relative.label} is furthest over its own plan at ${relative.pctFormatted}.` : ', and is also furthest over its own plan.') + ` ${above.length} of ${rows.length} ${dim === 'function' ? 'functions' : 'regions'} ${above.length === 1 ? 'is' : 'are'} above the 2% review threshold.`;
@@ -353,7 +353,7 @@ function costVarianceInsight(out, scope) {
   out.facts = [fact('Over plan', `${U.money(total)} · ${U.fmt(totalPct, 'ratio')}`, 'Annual run rate minus comparable annual plan'), fact('Largest contributor', `${top.label} · ${top.formatted}`, total > 0 ? `${U.fmt(top.share, 'ratio')} of the overspend` : 'Largest variance'), fact('Furthest over own plan', `${relative.label} · ${relative.pctFormatted}`, 'Variance / that segment’s plan'), fact('Above 2% threshold', `${above.length} of ${rows.length}`, 'Existing cost signal threshold')];
   out.evidence = [evidence(descriptor('E05', scope))];
   out.boundary += ' Contributions are run-rate differences by segment, not booked savings or causes.';
-  out.followups = ['Model the capacity scenario', 'Workforce cost by function', 'Explain E05'];
+  out.followups = ['Workforce cost by function', 'Workforce cost trend', 'Explain E05'];
 }
 function onboardingInsight(out, scope) {
   const s = D.summarize(scope), c = s.cohort.current, min = s.privacy.minimumDisplayN, where = [scope.function !== 'all' ? scope.function : '', scope.region !== 'all' ? scope.region : ''].filter(Boolean).join(', ');
